@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-black text-white;
+}
+.neon-text {
+  color: #39FF14;
+  text-shadow:
+    0 0 5px #39FF14,
+    0 0 10px #39FF14,
+    0 0 20px #39FF14,
+    0 0 40px #39FF14;
+}
+.text-neon-green {
+  color: #39FF14;
+}
+
+.hover\:text-neon:hover {
+  color: #39FF14;
+}
+html, body, #root, canvas {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  
+}  
+#tsparticles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+
+
+
