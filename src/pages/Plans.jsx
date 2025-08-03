@@ -1,5 +1,6 @@
 // src/pages/Plans.jsx
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
@@ -39,9 +40,12 @@ export default function Plans() {
                 </li>
               ))}
             </ul>
-            <button className="bg-green-500 text-black font-semibold px-6 py-2 rounded-full hover:bg-green-400 transition-all">
-              Join Now
-            </button>
+            <Link to="/join">
+  <button className="bg-[#39FF14] text-black px-4 py-2 rounded-xl font-bold hover:bg-lime-400 transition">
+    Join Now
+  </button>
+</Link>
+            
           </motion.div>
         ))}
       </div>

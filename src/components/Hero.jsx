@@ -1,13 +1,11 @@
 import { motion } from "framer-motion";
-import ParticlesBackground from "./ParticlesBackground"; // ✅ import it
+
 
 export default function Hero() {
   return (
     <section className="relative h-screen bg-black text-white overflow-hidden">
       {/* ✅ Particles background layer */}
-      <div className="absolute inset-0 z-0">
-        <ParticlesBackground />
-      </div>
+      
 
       {/* Hero Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">

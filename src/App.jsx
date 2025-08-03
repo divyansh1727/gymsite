@@ -5,7 +5,15 @@ import Trainers from "./pages/Trainers";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Navbar from "./components/Navbar";
-import ParticlesBackground from "./components/ParticlesBackground";
+import Join from "./pages/Join";
+import Success from "./pages/Success";
+import Testimonials from "./pages/Testimonials";
+
+
+
+
+
+
 
 export default function App() {
   const location = useLocation();
@@ -15,8 +23,11 @@ export default function App() {
 
   return (
     <>
+
       {/* Show particles only on Home */}
-      {showParticles && <ParticlesBackground />}
+    
+    
+
 
       {/* Navbar always visible */}
       <Navbar />
@@ -28,7 +39,14 @@ export default function App() {
         <Route path="/trainers" element={<Trainers />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
+        <Route path="/join" element={<Join />} />
+        <Route path="/success" element={<Success />} />
+        <Route path="/testimonials" element={<Testimonials />} />
+
+
+
       </Routes>
+  
     </>
   );
 }
