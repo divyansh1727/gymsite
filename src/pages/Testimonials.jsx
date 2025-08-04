@@ -39,13 +39,13 @@ export default function Testimonials() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section className="min-h-screen bg-black py-16 px-6 text-white overflow-hidden">
+    <section className="min-h-screen bg-black py-16 px-6 text-white">
       <h1 className="text-4xl md:text-5xl font-bold neon-text text-center mb-12">
         What Our Clients Say
       </h1>
 
       <div
-        className="overflow-hidden"
+        className="overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -57,11 +57,14 @@ export default function Testimonials() {
             repeat: Infinity,
             ease: "linear",
           }}
+          drag="x"
+          dragConstraints={{ left: -1000, right: 0 }}
+          dragElastic={0.05}
         >
           {[...testimonials, ...testimonials].map((t, i) => (
             <div
               key={i}
-              className="min-w-[300px] max-w-sm bg-neutral-900 p-6 rounded-2xl border border-neon shadow-neon"
+              className="min-w-[300px] max-w-sm bg-neutral-900 p-6 rounded-2xl border border-neon shadow-neon snap-center"
             >
               <div className="flex items-center gap-4 mb-3">
                 <img
@@ -86,5 +89,6 @@ export default function Testimonials() {
     </section>
   );
 }
+
 
 

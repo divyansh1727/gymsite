@@ -15,6 +15,7 @@ import Testimonials from "./pages/Testimonials";
 
 
 
+
 export default function App() {
   const location = useLocation();
 
@@ -24,12 +25,15 @@ export default function App() {
   return (
     <>
 
+
       {/* Show particles only on Home */}
     
     
 
 
       {/* Navbar always visible */}
+      
+    
       <Navbar />
 
       {/* Routes */}

@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import Hero from "../components/Hero";
 import WhyChooseUs from "../components/WhyChooseUs";
 import Trainers from "./Trainers";
@@ -8,14 +7,16 @@ import About from "./About";
 
 export default function Home() {
   return (
-    <>
+        <div className="relative overflow-hidden">
+
+     
       <Hero />
       <WhyChooseUs />
       <About/>
       <Trainers/>
       <Testimonials />
       <Footer />
-    </>
+    </div>
   );
 }
 

@@ -1,0 +1,14 @@
+<!-- barbell.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <rect x="0" y="26" width="8" height="12" fill="#333"/>
+  <rect x="8" y="22" width="4" height="20" fill="#666"/>
+  <rect x="12" y="26" width="6" height="12" fill="#999"/>
+  
+  <rect x="18" y="30" width="10" height="4" fill="#aaa"/>
+  <rect x="28" y="30" width="8" height="4" fill="#555"/>
+  <rect x="36" y="30" width="10" height="4" fill="#aaa"/>
+  
+  <rect x="46" y="26" width="6" height="12" fill="#999"/>
+  <rect x="52" y="22" width="4" height="20" fill="#666"/>
+  <rect x="56" y="26" width="8" height="12" fill="#333"/>
+</svg>
