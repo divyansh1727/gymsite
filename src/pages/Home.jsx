@@ -4,6 +4,8 @@ import Trainers from "./Trainers";
 import Testimonials from "../pages/Testimonials"; // This can stay here for now
 import Footer from "../components/Footer";
 import About from "./About";
+import RegisterButton from "../components/RegisterButton";
+
 
 export default function Home() {
   return (
@@ -14,6 +16,7 @@ export default function Home() {
       <WhyChooseUs />
       <About/>
       <Trainers/>
+      <RegisterButton/>
       <Testimonials />
       <Footer />
     </div>
