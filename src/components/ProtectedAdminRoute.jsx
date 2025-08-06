@@ -1,43 +1,38 @@
 // src/components/ProtectedAdminRoute.jsx
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { Navigate } from "react-router-dom";
+import { auth, db } from "../firebase";
 
 export default function ProtectedAdminRoute({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const checkRole = async () => {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("User detected:", user);
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        console.log("User data:", docSnap.data());
 
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.role === "admin") {
-              setIsAdmin(true);
-            } else {
-              navigate("/"); // not admin, redirect
-            }
-          } else {
-            navigate("/");
-          }
+        if (docSnap.exists() && docSnap.data().role === "admin") {
+          setIsAdmin(true);
         } else {
-          navigate("/"); // not logged in
+          setIsAdmin(false);
         }
-        setLoading(false);
-      });
-    };
+      } else {
+        setIsAdmin(false);
+      }
 
-    checkRole();
-  }, [navigate]);
+      setLoading(false);
+    });
 
-  if (loading) return <div className="text-white text-center">Checking access...</div>;
-  return isAdmin ? children : null;
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) return <div className="text-white p-8">Loading...</div>;
+
+  return isAdmin ? children : <Navigate to="/" replace />;
 }

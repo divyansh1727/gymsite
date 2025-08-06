@@ -44,7 +44,7 @@ export default function ParticlesBackground() {
           opacity: { value: 0.85 },
           move: {
             enable: true,
-            speed: 7,
+            speed: 1.7,
             direction: "none",
             outModes: { default: "out" },
           },

@@ -7,6 +7,7 @@ import About from "./About";
 import RegisterButton from "../components/RegisterButton";
 
 
+
 export default function Home() {
   return (
         <div className="relative overflow-hidden">

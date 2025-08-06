@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 const healthOptions = [
   "Asthma",
@@ -13,36 +12,33 @@ const healthOptions = [
   "Other"
 ];
 
-export default function RegisterForm() {
-  const [user, setUser] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    gender: "",
-    bloodGroup: "",
-    previousHealthProblems: [],
-    address: "",
-    alternateNumber: ""
-  });
-
+export default function EditUser() {
+  const { id } = useParams(); // user ID from URL
   const navigate = useNavigate();
+  const [formData, setFormData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setFormData((prev) => ({
-          ...prev,
-          email: currentUser.email || ""
-        }));
-      } else {
-        navigate("/"); // redirect if not logged in
+    const fetchUser = async () => {
+      try {
+        const docRef = doc(db, "users", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setFormData(docSnap.data());
+        } else {
+          alert("User not found");
+          navigate("/admin/panel");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error fetching user");
+      } finally {
+        setLoading(false);
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, []);
+    fetchUser();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,7 +48,7 @@ export default function RegisterForm() {
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
     setFormData((prev) => {
-      const current = new Set(prev.previousHealthProblems);
+      const current = new Set(prev.previousHealthProblems || []);
       if (checked) current.add(value);
       else current.delete(value);
       return { ...prev, previousHealthProblems: Array.from(current) };
@@ -61,21 +57,21 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.uid) return;
-
     try {
-      await setDoc(doc(db, "users", user.uid), formData);
-      alert("Registration successful!");
-      navigate("/"); // or dashboard
-    } catch (error) {
-      console.error("Error saving user:", error);
-      alert("Something went wrong!");
+      await updateDoc(doc(db, "users", id), formData);
+      alert("User updated!");
+      navigate("/admin/panel");
+    } catch (err) {
+      console.error(err);
+      alert("Update failed");
     }
   };
 
+  if (loading || !formData) return <div className="text-center mt-10 text-white">Loading...</div>;
+
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl shadow-lg mt-10">
-      <h2 className="text-2xl font-bold mb-4 text-center">Complete Registration</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center">Edit User Details</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
 
         <input
@@ -93,7 +89,7 @@ export default function RegisterForm() {
           name="email"
           value={formData.email}
           readOnly
-          className="w-full p-3 rounded-lg bg-neutral-800 text-gray-400 cursor-not-allowed"
+          className="w-full p-3 rounded-lg bg-neutral-800 text-gray-400"
         />
 
         <input
@@ -140,7 +136,7 @@ export default function RegisterForm() {
                 <input
                   type="checkbox"
                   value={item}
-                  checked={formData.previousHealthProblems.includes(item)}
+                  checked={formData.previousHealthProblems?.includes(item)}
                   onChange={handleCheckboxChange}
                   className="accent-pink-500"
                 />
@@ -172,7 +168,7 @@ export default function RegisterForm() {
           type="submit"
           className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700 transition"
         >
-          Submit
+          Save Changes
         </button>
       </form>
     </div>
