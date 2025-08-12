@@ -1,38 +1,49 @@
-// src/components/ProtectedAdminRoute.jsx
 import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { Navigate } from "react-router-dom";
-import { auth, db } from "../firebase";
+import { db, auth } from "../firebase";
+import { Navigate, useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function ProtectedAdminRoute({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("User detected:", user);
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        console.log("User data:", docSnap.data());
-
-        if (docSnap.exists() && docSnap.data().role === "admin") {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
+      if (!user) {
+        navigate("/login");
+        return;
       }
 
-      setLoading(false);
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const role = userDoc.data().role || "none";
+          if (role === "admin") {
+            setIsAdmin(true); // ✅ now updates state
+          } else {
+            console.warn(`Access denied: role is '${role}'`);
+            navigate("/not-authorized");
+          }
+        } else {
+          console.warn("Access denied: no user document found");
+          navigate("/not-authorized");
+        }
+      } catch (error) {
+        console.error("Error checking admin role:", error);
+        navigate("/not-authorized");
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
-  if (loading) return <div className="text-white p-8">Loading...</div>;
+  if (loading) {
+    return <div className="text-white text-center mt-10">Loading...</div>;
+  }
 
-  return isAdmin ? children : <Navigate to="/" replace />;
+  return isAdmin ? children : null;
 }

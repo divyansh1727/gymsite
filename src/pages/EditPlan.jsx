@@ -2,17 +2,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from  "../firebase";
+import { db } from "../firebase";
 
 export default function EditPlan() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [plan, setPlan] = useState({
     name: "",
     price: "",
     duration: "",
-    features: []
+    features: [],
   });
+
+  const [featuresText, setFeaturesText] = useState("");
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -20,7 +23,13 @@ export default function EditPlan() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setPlan({ ...data, features: data.features || [] });
+        setPlan({
+          name: data.name || "",
+          price: data.price || "",
+          duration: data.duration || "",
+          features: data.features || [],
+        });
+        setFeaturesText((data.features || []).join(", "));
       }
     };
     fetchPlan();
@@ -33,13 +42,19 @@ export default function EditPlan() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!plan.name || !plan.price || !plan.duration) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
     const updatedPlan = {
       ...plan,
-      features: plan.featuresText
-        ? plan.featuresText.split(",").map((f) => f.trim())
-        : []
+      features: featuresText
+        .split(",")
+        .map((f) => f.trim())
+        .filter((f) => f !== ""),
     };
-    delete updatedPlan.featuresText;
+
     await updateDoc(doc(db, "plans", id), updatedPlan);
     alert("Plan updated!");
     navigate("/admin/manage-plans");
@@ -48,7 +63,10 @@ export default function EditPlan() {
   return (
     <div className="p-6 max-w-xl mx-auto text-white">
       <h2 className="text-2xl font-bold mb-4">Edit Plan</h2>
-      <form onSubmit={handleSubmit} className="grid gap-4 bg-neutral-900 p-4 rounded-xl shadow">
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-4 bg-neutral-900 p-4 rounded-xl shadow"
+      >
         <input
           name="name"
           value={plan.name}
@@ -56,13 +74,17 @@ export default function EditPlan() {
           placeholder="Plan Name"
           className="p-2 rounded bg-gray-800"
         />
-        <input
-          name="price"
-          value={plan.price}
-          onChange={handleChange}
-          placeholder="Price"
-          className="p-2 rounded bg-gray-800"
-        />
+       <div className="relative">
+  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+  <input
+    name="price"
+    value={plan.price}
+    onChange={handleChange}
+    placeholder="Price"
+    className="pl-6 p-2 rounded bg-gray-800 w-full"
+  />
+</div>
+
         <input
           name="duration"
           value={plan.duration}
@@ -72,8 +94,8 @@ export default function EditPlan() {
         />
         <textarea
           name="featuresText"
-          value={plan.features?.join(", ") || ""}
-          onChange={handleChange}
+          value={featuresText}
+          onChange={(e) => setFeaturesText(e.target.value)}
           placeholder="Features (comma-separated)"
           className="p-2 rounded bg-gray-800"
         />

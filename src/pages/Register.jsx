@@ -1,12 +1,12 @@
 // src/pages/Register.jsx
-
 import { useState } from "react";
-import { auth } from "../firebase"; // adjust path if needed
+import { auth, db } from "../firebase"; // db added for Firestore
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -15,6 +15,21 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Save user in Firestore
+  const saveUserData = async (user) => {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        createdAt: new Date(),
+        role: "user",
+      });
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -26,8 +41,9 @@ export default function Register() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/user-details"); // go to home or dashboard
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await saveUserData(userCredential.user);
+      navigate("/user-details");
     } catch (err) {
       setError(err.message);
     }
@@ -36,8 +52,9 @@ export default function Register() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      navigate("/register/form");
+      const result = await signInWithPopup(auth, provider);
+      await saveUserData(result.user);
+      navigate("/user-details");
     } catch (err) {
       setError(err.message);
     }
@@ -46,7 +63,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
       <div className="bg-neutral-900 p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Join Us</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <form onSubmit={handleRegister} className="space-y-4">

@@ -5,6 +5,8 @@ import Testimonials from "../pages/Testimonials"; // This can stay here for now
 import Footer from "../components/Footer";
 import About from "./About";
 import RegisterButton from "../components/RegisterButton";
+import Plans from "./Plans";
+
 
 
 
@@ -16,6 +18,7 @@ export default function Home() {
       <Hero />
       <WhyChooseUs />
       <About/>
+      <Plans/>
       <Trainers/>
       <RegisterButton/>
       <Testimonials />

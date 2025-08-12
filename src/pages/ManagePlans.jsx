@@ -1,6 +1,6 @@
 // src/pages/admin/ManagePlans.jsx
 import { useEffect, useState } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -9,20 +9,20 @@ export default function ManagePlans() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPlans = async () => {
-      const snapshot = await getDocs(collection(db, "plans"));
+    const unsub = onSnapshot(collection(db, "plans"), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       setPlans(data);
-    };
-    fetchPlans();
+    });
+
+    return () => unsub();
   }, []);
 
   const handleDelete = async (id) => {
     await deleteDoc(doc(db, "plans", id));
-    setPlans(plans.filter((plan) => plan.id !== id));
+    // No need to manually update state — snapshot does it
   };
 
   return (
@@ -51,13 +51,12 @@ export default function ManagePlans() {
                 <p><strong>Features:</strong></p>
                 <ul className="list-disc list-inside">
                   {Array.isArray(plan.features) && plan.features.length > 0 ? (
-  plan.features.map((feature, idx) => (
-    <li key={idx}>{feature}</li>
-  ))
-) : (
-  <li>No features listed</li>
-)}
-
+                    plan.features.map((feature, idx) => (
+                      <li key={idx}>{feature}</li>
+                    ))
+                  ) : (
+                    <li>No features listed</li>
+                  )}
                 </ul>
               </div>
 
@@ -82,5 +81,6 @@ export default function ManagePlans() {
     </div>
   );
 }
+
 
 

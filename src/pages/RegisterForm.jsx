@@ -1,20 +1,13 @@
-import { useEffect, useState } from "react";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-
-const healthOptions = [
-  "Asthma",
-  "Diabetes",
-  "Heart Issues",
-  "Joint Pain",
-  "Back Pain",
-  "Other"
-];
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import generatePDF from "../utilis/generatePDF";
+import emailjs from "emailjs-com";
 
 export default function RegisterForm() {
-  const [user, setUser] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const plan = location.state?.plan || {};
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,155 +16,104 @@ export default function RegisterForm() {
     bloodGroup: "",
     previousHealthProblems: [],
     address: "",
-    alternateNumber: ""
+    alternateNumber: "",
+    photo: null,
+    document: null,
   });
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setFormData((prev) => ({
-          ...prev,
-          email: currentUser.email || ""
-        }));
-      } else {
-        navigate("/"); // redirect if not logged in
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const healthOptions = ["Asthma", "Diabetes", "Heart Issues", "Joint Pain", "Back Pain", "Other"];
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value,
+    });
   };
 
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
     setFormData((prev) => {
       const current = new Set(prev.previousHealthProblems);
-      if (checked) current.add(value);
-      else current.delete(value);
+      checked ? current.add(value) : current.delete(value);
       return { ...prev, previousHealthProblems: Array.from(current) };
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.uid) return;
 
     try {
-      await setDoc(doc(db, "users", user.uid), formData);
-      alert("Registration successful!");
-      navigate("/"); // or dashboard
+      // 1. Create PDF
+      const pdfBlob = await generatePDF(formData, plan);
+
+      // 2. Convert PDF to Base64 for EmailJS
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64PDF = reader.result.split(",")[1];
+
+        await emailjs.send(
+          "YOUR_SERVICE_ID",
+          "YOUR_TEMPLATE_ID",
+          {
+            to_email: "YOUR_GYM_EMAIL@example.com",
+            user_name: formData.name,
+            user_email: formData.email,
+            plan_name: plan.name,
+            pdf_base64: base64PDF,
+          },
+          "YOUR_PUBLIC_KEY"
+        );
+
+        navigate("/success");
+      };
+      reader.readAsDataURL(pdfBlob);
     } catch (error) {
-      console.error("Error saving user:", error);
-      alert("Something went wrong!");
+      console.error(error);
+      alert("Something went wrong while sending your registration.");
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl shadow-lg mt-10">
-      <h2 className="text-2xl font-bold mb-4 text-center">Complete Registration</h2>
+    <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        Register for {plan.name} - {plan.price}
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <input name="email" type="email" placeholder="Email" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        />
-
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          readOnly
-          className="w-full p-3 rounded-lg bg-neutral-800 text-gray-400 cursor-not-allowed"
-        />
-
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone Number"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        />
-
-        <select
-          name="gender"
-          value={formData.gender}
-          onChange={handleChange}
-          required
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        >
+        <select name="gender" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
           <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
         </select>
 
-        <select
-          name="bloodGroup"
-          value={formData.bloodGroup}
-          onChange={handleChange}
-          required
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        >
+        <select name="bloodGroup" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
           <option value="">Select Blood Group</option>
-          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
-            <option key={group} value={group}>{group}</option>
-          ))}
+          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => <option key={g}>{g}</option>)}
         </select>
 
         <div>
-          <label className="block mb-2">Previous Health Problems:</label>
+          <label>Previous Health Problems:</label>
           <div className="grid grid-cols-2 gap-2">
-            {healthOptions.map((item) => (
-              <label key={item} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={item}
-                  checked={formData.previousHealthProblems.includes(item)}
-                  onChange={handleCheckboxChange}
-                  className="accent-pink-500"
-                />
-                <span>{item}</span>
+            {healthOptions.map((opt) => (
+              <label key={opt} className="flex items-center space-x-2">
+                <input type="checkbox" value={opt} onChange={handleCheckboxChange} />
+                <span>{opt}</span>
               </label>
             ))}
           </div>
         </div>
 
-        <textarea
-          name="address"
-          placeholder="Address"
-          value={formData.address}
-          onChange={handleChange}
-          required
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        />
+        <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
 
-        <input
-          type="text"
-          name="alternateNumber"
-          placeholder="Alternate Contact Number"
-          value={formData.alternateNumber}
-          onChange={handleChange}
-          className="w-full p-3 rounded-lg bg-neutral-800"
-        />
+        <input type="file" name="photo" accept="image/*" onChange={handleChange} required />
+        <input type="file" name="document" onChange={handleChange} />
 
-        <button
-          type="submit"
-          className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700 transition"
-        >
+        <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
           Submit
         </button>
       </form>
