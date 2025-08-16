@@ -1,10 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import generatePDF from "../utilis/generatePDF";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage, db } from "../firebase"; // ✅ make sure db is exported in firebase.js
-import { doc, setDoc } from "firebase/firestore";
-import upiQR from "../assets/upi.png";
+
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -49,41 +46,35 @@ export default function RegisterForm() {
     setShowPayment(true);
   };
 
-  // Step 2: After payment is done, generate PDF, upload to Firebase, save to Firestore, and share via WhatsApp
+  // Step 2: After payment, generate PDF and download for admin with timestamp
   const handlePaymentDone = async () => {
     try {
-      // 1. Generate PDF as Blob
       const pdfBlob = await generatePDF(formData, plan);
 
-      // 2. Upload to Firebase Storage
-      const fileRef = ref(storage, `plans/${formData.name}_${Date.now()}.pdf`);
-      await uploadBytes(fileRef, pdfBlob);
+      // Timestamped file name
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}-${(now.getMonth()+1)
+        .toString()
+        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+        .getHours()
+        .toString()
+        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
-      // 3. Get download URL
-      const pdfUrl = await getDownloadURL(fileRef);
+      // Create a downloadable link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      // 4. Save details in Firestore
-      await setDoc(doc(db, "registrations", formData.email), {
-        ...formData,
-        plan: plan.name,
-        price: plan.price,
-        pdfUrl,
-        createdAt: new Date(),
-      });
-
-      // 5. Open WhatsApp with pre-filled message
-      const whatsappNumber = "917028642342"; // ✅ replace with your business number
-      const message = `New registration from ${formData.name} for ${plan.name}. Download PDF: ${pdfUrl}`;
-
-      window.open(
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
-        "_blank"
-      );
-
+      alert("PDF generated and ready for admin download!");
       navigate("/success");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while saving your registration.");
+      alert("Something went wrong while generating the PDF.");
     }
   };
 
@@ -93,23 +84,53 @@ export default function RegisterForm() {
         Register for {plan.name} - {plan.price}
       </h2>
 
-      {/* Step 1: Form */}
       {!showPayment && (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-          <input name="email" type="email" placeholder="Email" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+          <input
+            name="name"
+            placeholder="Full Name"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          />
+          <input
+            name="phone"
+            placeholder="Phone Number"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          />
 
-          <select name="gender" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+          <select
+            name="gender"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          >
             <option value="">Select Gender</option>
             <option>Male</option>
             <option>Female</option>
             <option>Other</option>
           </select>
 
-          <select name="bloodGroup" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+          <select
+            name="bloodGroup"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          >
             <option value="">Select Blood Group</option>
-            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => <option key={g}>{g}</option>)}
+            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => (
+              <option key={g}>{g}</option>
+            ))}
           </select>
 
           <div>
@@ -124,70 +145,77 @@ export default function RegisterForm() {
             </div>
           </div>
 
-          <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+          <textarea
+            name="address"
+            placeholder="Address"
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-neutral-800"
+            required
+          />
 
-          <input type="file" name="photo" accept="image/*" onChange={(e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, photo: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }}
- />
+          <input
+            type="file"
+            name="photo"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setFormData((prev) => ({ ...prev, photo: reader.result }));
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
           <input type="file" name="document" onChange={handleChange} />
 
-          <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
+          <button
+            type="submit"
+            className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700"
+          >
             Submit
           </button>
         </form>
       )}
 
       {showPayment && (
-  <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-    <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-    <p className="mb-3">Choose a payment method:</p>
+        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
+          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
+          <p className="mb-3">Choose a payment method:</p>
 
-    <div className="flex flex-col space-y-3">
-      {/* Google Pay */}
-      <a
-        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
-        className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
-      >
-        Pay with Google Pay
-      </a>
+          <div className="flex flex-col space-y-3">
+            <a
+              href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with Google Pay
+            </a>
+            <a
+              href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with PhonePe
+            </a>
+            <a
+              href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with Paytm
+            </a>
+          </div>
 
-      {/* PhonePe */}
-      <a
-        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
-        className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
-      >
-        Pay with PhonePe
-      </a>
-
-      {/* Paytm */}
-      <a
-        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
-        className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-      >
-        Pay with Paytm
-      </a>
-    </div>
-
-    <p className="mt-4 text-sm text-gray-300">
-      After completing payment, click the button below to confirm.
-    </p>
-    <button
-      onClick={handlePaymentDone}
-      className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2"
-    >
-      I Have Paid
-    </button>
-  </div>
-)}
-
+          <p className="mt-4 text-sm text-gray-300">
+            After completing payment, click the button below to confirm.
+          </p>
+          <button
+            onClick={handlePaymentDone}
+            className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2"
+          >
+            I Have Paid
+          </button>
+        </div>
+      )}
     </div>
   );
 }

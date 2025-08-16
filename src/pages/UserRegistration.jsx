@@ -2,7 +2,7 @@
 import { auth, db } from "../firebase";
 import { useState } from "react";
 import { setDoc, doc, Timestamp } from "firebase/firestore";
-import { generatePDF } from "../utils/generatePDF";
+import { generatePDF } from "../utilis/generatePDF";
 import { useNavigate } from "react-router-dom";
 
 export default function UserRegistration() {
