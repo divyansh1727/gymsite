@@ -145,26 +145,49 @@ export default function RegisterForm() {
         </form>
       )}
 
-      {/* Step 2: Payment */}
       {showPayment && (
-        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-          <p className="mb-3">
-            UPI ID: <strong>divirajput2358@oksbi</strong>
-          </p>
-          <img
-            src={upiQR}
-            alt="UPI QR"
-            className="w-40 mx-auto my-3"
-          />
-          <button
-            onClick={handlePaymentDone}
-            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg mt-4"
-          >
-            I Have Paid
-          </button>
-        </div>
-      )}
+  <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
+    <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
+    <p className="mb-3">Choose a payment method:</p>
+
+    <div className="flex flex-col space-y-3">
+      {/* Google Pay */}
+      <a
+        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+        className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+      >
+        Pay with Google Pay
+      </a>
+
+      {/* PhonePe */}
+      <a
+        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+        className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
+      >
+        Pay with PhonePe
+      </a>
+
+      {/* Paytm */}
+      <a
+        href={`upi://pay?pa=divirajput2358@oksbi&pn=Divyansh Singh&tn=${plan.name}&am=${plan.price}&cu=INR`}
+        className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+      >
+        Pay with Paytm
+      </a>
+    </div>
+
+    <p className="mt-4 text-sm text-gray-300">
+      After completing payment, click the button below to confirm.
+    </p>
+    <button
+      onClick={handlePaymentDone}
+      className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2"
+    >
+      I Have Paid
+    </button>
+  </div>
+)}
+
     </div>
   );
 }
