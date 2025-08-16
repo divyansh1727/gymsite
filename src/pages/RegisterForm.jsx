@@ -1,8 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import generatePDF from "../utilis/generatePDF";
-import emailjs from "emailjs-com";
-import upiQR from"../assets/upi.png";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage, db } from "../firebase"; // ✅ make sure db is exported in firebase.js
+import { doc, setDoc } from "firebase/firestore";
+import upiQR from "../assets/upi.png";
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -42,48 +44,46 @@ export default function RegisterForm() {
     });
   };
 
-  // Step 1: Show payment section instead of sending immediately
   const handleSubmit = (e) => {
     e.preventDefault();
     setShowPayment(true);
   };
 
-  // Step 2: After payment is done, generate PDF and send
+  // Step 2: After payment is done, generate PDF, upload to Firebase, save to Firestore, and share via WhatsApp
   const handlePaymentDone = async () => {
     try {
+      // 1. Generate PDF as Blob
       const pdfBlob = await generatePDF(formData, plan);
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64PDF = reader.result.split(",")[1];
+      // 2. Upload to Firebase Storage
+      const fileRef = ref(storage, `plans/${formData.name}_${Date.now()}.pdf`);
+      await uploadBytes(fileRef, pdfBlob);
 
-        await emailjs.send(
-          "service_f90de9m", // your EmailJS service ID
-          "template_pp56nap", // your EmailJS template ID
-          {
-            to_email: "divys2705@gmail.com",
-            user_name: formData.name,
-            user_email: formData.email,
-            plan_name: plan.name,
-            attachments: [
-              {
-                name: `${formData.name}_Registration.pdf`,
-                data: base64PDF
-              }
-            ]
-          },
-          "STd93kFk82qnINfgE" // your EmailJS public key
-        );
+      // 3. Get download URL
+      const pdfUrl = await getDownloadURL(fileRef);
 
-        // Optional: WhatsApp link to notify admin
-        window.open(`https://wa.me/<ADMIN_PHONE>?text=New registration from ${formData.name} for ${plan.name}`);
+      // 4. Save details in Firestore
+      await setDoc(doc(db, "registrations", formData.email), {
+        ...formData,
+        plan: plan.name,
+        price: plan.price,
+        pdfUrl,
+        createdAt: new Date(),
+      });
 
-        navigate("/success");
-      };
-      reader.readAsDataURL(pdfBlob);
+      // 5. Open WhatsApp with pre-filled message
+      const whatsappNumber = "917028642342"; // ✅ replace with your business number
+      const message = `New registration from ${formData.name} for ${plan.name}. Download PDF: ${pdfUrl}`;
+
+      window.open(
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+        "_blank"
+      );
+
+      navigate("/success");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong while sending your registration.");
+      alert("Something went wrong while saving your registration.");
     }
   };
 
@@ -126,7 +126,17 @@ export default function RegisterForm() {
 
           <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
 
-          <input type="file" name="photo" accept="image/*" onChange={handleChange} required />
+          <input type="file" name="photo" accept="image/*" onChange={(e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, photo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  }}
+ />
           <input type="file" name="document" onChange={handleChange} />
 
           <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
@@ -136,27 +146,25 @@ export default function RegisterForm() {
       )}
 
       {/* Step 2: Payment */}
-      {/* Step 2: Payment */}
-{showPayment && (
-  <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-    <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-    <p className="mb-3">
-      UPI ID: <strong>divirajput2358@oksbi</strong>
-    </p>
-    <img
-      src={upiQR}
-      alt="UPI QR"
-      className="w-40 mx-auto my-3"
-    />
-    <button
-      onClick={handlePaymentDone}
-      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg mt-4"
-    >
-      I Have Paid
-    </button>
-  </div>
-)}
-
+      {showPayment && (
+        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
+          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
+          <p className="mb-3">
+            UPI ID: <strong>divirajput2358@oksbi</strong>
+          </p>
+          <img
+            src={upiQR}
+            alt="UPI QR"
+            className="w-40 mx-auto my-3"
+          />
+          <button
+            onClick={handlePaymentDone}
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg mt-4"
+          >
+            I Have Paid
+          </button>
+        </div>
+      )}
     </div>
   );
 }

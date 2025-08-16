@@ -4,9 +4,11 @@ import jsPDF from "jspdf";
 export default async function generatePDF(formData, plan) {
   const doc = new jsPDF();
 
+  // Title
   doc.setFontSize(18);
   doc.text("Gym Registration Details", 105, 20, { align: "center" });
 
+  // User details
   doc.setFontSize(12);
   doc.text(`Name: ${formData.name}`, 20, 40);
   doc.text(`Email: ${formData.email}`, 20, 50);
@@ -17,8 +19,18 @@ export default async function generatePDF(formData, plan) {
   doc.text(`Address: ${formData.address}`, 20, 100);
 
   if (formData.previousHealthProblems?.length > 0) {
-    doc.text(`Health Issues: ${formData.previousHealthProblems.join(", ")}`, 20, 110);
+    doc.text(
+      `Health Issues: ${formData.previousHealthProblems.join(", ")}`,
+      20,
+      110
+    );
   }
 
+  if (formData.photo) {
+    doc.addImage(formData.photo, "JPEG", 150, 40, 40, 40); 
+    doc.text("Photo:", 150, 35);
+  }
+
+  // ✅ Return as Blob for Firebase upload
   return doc.output("blob");
 }
