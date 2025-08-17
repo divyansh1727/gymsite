@@ -157,6 +157,8 @@ export default function RegisterForm() {
             type="file"
             name="photo"
             accept="image/*"
+            capture="environment"   // 👈 allows camera capture
+
             onChange={(e) => {
               const file = e.target.files[0];
               if (file) {
