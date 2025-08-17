@@ -47,60 +47,36 @@ export default function RegisterForm() {
   };
 
   // Step 2: After payment, generate PDF and download for admin with timestamp
-  // Step 2: After payment, generate PDF and download for admin with timestamp
-const handlePaymentDone = async () => {
-  try {
-    const pdfBlob = await generatePDF(formData, plan);
+  const handlePaymentDone = async () => {
+    try {
+      const pdfBlob = await generatePDF(formData, plan);
 
-    // Timestamped file name
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
-      .getHours()
-      .toString()
-      .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+      // Timestamped file name
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}-${(now.getMonth()+1)
+        .toString()
+        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+        .getHours()
+        .toString()
+        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
-    // 👉 1. Let user download as before
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      // Create a downloadable link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-    // 👉 2. Upload to file.io for a free temp link
-    const uploadData = new FormData();
-    uploadData.append("file", pdfBlob, `${timestamp}_${formData.name}.pdf`);
-
-    const res = await fetch("https://file.io", {
-      method: "POST",
-      body: uploadData,
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      // 👉 3. Create WhatsApp message with link
-      const adminNumber = "917028642342"; // 🔥 replace with your number
-      const message = `New payment from ${formData.name}\nPlan: ${plan.name}\nPDF: ${data.link}`;
-      const whatsappLink = `https://wa.me/${adminNumber}?text=${encodeURIComponent(
-        message
-      )}`;
-      window.open(whatsappLink, "_blank"); // opens WhatsApp with prefilled msg
-    } else {
-      console.warn("File.io upload failed, skipping WhatsApp link");
+      alert("PDF generated and ready for admin download!");
+      navigate("/success");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while generating the PDF.");
     }
-
-    alert("PDF generated, ready for admin & WhatsApp link created!");
-    navigate("/success");
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong while generating the PDF.");
-  }
-};
-
+  };
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
