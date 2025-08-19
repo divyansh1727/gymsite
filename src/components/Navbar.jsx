@@ -11,15 +11,18 @@ export default function Navbar() {
     { name: "Plans", path: "/plans" },
     { name: "Trainers", path: "/trainers" },
     { name: "Contact", path: "/contact" },
-    {name: "Testimonials", path: "/testimonials"},
+    { name: "Testimonials", path: "/testimonials" },
     { name: "About", path: "/about" },
-
   ];
 
   return (
-    <nav className="bg-black px-6 py-4 border-b border-green-500 flex justify-between items-center">
+    <nav
+      className="px-6 py-4 border-b border-purple-500 
+                 flex justify-between items-center
+                 bg-gradient-to-r from-purple-800 via-blue-900 to-black"
+    >
       <motion.h1
-        className="text-3xl font-extrabold neon-text"
+        className="text-3xl font-extrabold italic text-white drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -33,7 +36,7 @@ export default function Navbar() {
           <Link
             key={name}
             to={path}
-            className="hover:text-green-400 transition duration-300 text-white"
+            className="text-white hover:text-purple-300 transition duration-300"
           >
             {name}
           </Link>
@@ -42,7 +45,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Toggle */}
       <button
-        className="md:hidden text-green-400 text-2xl"
+        className="md:hidden text-purple-300 text-2xl"
         onClick={() => setOpen(!open)}
       >
         ☰
@@ -50,13 +53,17 @@ export default function Navbar() {
 
       {/* Mobile Nav */}
       {open && (
-        <div className="absolute top-16 left-0 w-full bg-black border-t border-green-500 p-4 flex flex-col md:hidden z-50">
+        <div
+          className="absolute top-16 left-0 w-full 
+                     bg-gradient-to-b from-purple-800 via-blue-900 to-black 
+                     border-t border-purple-500 p-4 flex flex-col md:hidden z-50"
+        >
           {navLinks.map(({ name, path }) => (
             <Link
               key={name}
               to={path}
               onClick={() => setOpen(false)} // close on link click
-              className="py-2 border-b border-gray-700 text-white hover:text-green-400"
+              className="py-2 border-b border-gray-700 text-white hover:text-purple-300"
             >
               {name}
             </Link>

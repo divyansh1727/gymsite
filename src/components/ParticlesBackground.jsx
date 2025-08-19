@@ -24,20 +24,11 @@ export default function ParticlesBackground() {
             type: "image",
             image: [
               {
-      src: "icons/dumbbell.svg", // Dumbbell
+      src: "icons/barbell.svg", // Dumbbell
       width: 50,
       height: 50,
     },
-    {
-      src: "icons/fire.svg", // Rod / Barbell
-      width: 32,
-      height: 32,
-    },
-    {
-      src: "icons/barbell.svg", // Kettlebell
-      width: 50,
-      height: 50,
-    },
+    
             ],
           },
           size: { value: 20, random: true },

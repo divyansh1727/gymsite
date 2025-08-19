@@ -35,6 +35,8 @@ html, body, #root, canvas {
   z-index: 0;
   pointer-events: none;
 }
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap');
+
 
 
 
