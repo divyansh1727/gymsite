@@ -1,11 +1,17 @@
+/* ✅ Keep all @imports at the top */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap');
 @import "tailwindcss";
+
+/* ✅ Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ✅ Custom styles */
 body {
   @apply bg-black text-white;
 }
+
 .neon-text {
   color: #39FF14;
   text-shadow:
@@ -14,6 +20,7 @@ body {
     0 0 20px #39FF14,
     0 0 40px #39FF14;
 }
+
 .text-neon-green {
   color: #39FF14;
 }
@@ -21,13 +28,14 @@ body {
 .hover\:text-neon:hover {
   color: #39FF14;
 }
+
 html, body, #root, canvas {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  
-}  
+}
+
 #tsparticles {
   position: absolute;
   width: 100%;
@@ -35,9 +43,6 @@ html, body, #root, canvas {
   z-index: 0;
   pointer-events: none;
 }
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap');
-
-
 
 
 

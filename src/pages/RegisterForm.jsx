@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import generatePDF from "../utilis/generatePDF";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
 
 
 export default function RegisterForm() {
@@ -48,35 +50,41 @@ export default function RegisterForm() {
 
   // Step 2: After payment, generate PDF and download for admin with timestamp
   const handlePaymentDone = async () => {
-    try {
-      const pdfBlob = await generatePDF(formData, plan);
+  try {
+    // 1️⃣ Generate PDF (optional: still download if you want)
+    const pdfBlob = await generatePDF(formData, plan);
 
-      // Timestamped file name
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}-${(now.getMonth()+1)
-        .toString()
-        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
-        .getHours()
-        .toString()
-        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+    // Optional: download locally
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}-${(now.getMonth()+1)
+      .toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+      .getHours().toString().padStart(2,"0")}-${now.getMinutes().toString().padStart(2,"0")}`;
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
-      // Create a downloadable link
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+    // 2️⃣ Upload registration data + PDF to Firestore
+    const pdfArrayBuffer = await pdfBlob.arrayBuffer(); // convert blob to binary
+    await addDoc(collection(db, "registrations"), {
+      ...formData,
+      planName: plan.name,
+      planPrice: plan.price,
+      pdfData: Array.from(new Uint8Array(pdfArrayBuffer)), // store binary as array
+      timestamp: serverTimestamp(),
+    });
 
-      alert("PDF generated and ready for admin download!");
-      navigate("/success");
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong while generating the PDF.");
-    }
-  };
+    alert("Registration complete! Admin will receive the PDF automatically.");
+    navigate("/success");
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong during registration.");
+  }
+};
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">

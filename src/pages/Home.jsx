@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import About from "../pages/About";
 import RegisterButton from "../components/RegisterButton";
 import Plans from "../pages/Plans";
-import AboutSection from "../components/AboutSection";
+
 
 
 
@@ -19,7 +19,7 @@ export default function Home() {
       <Hero />
       <WhyChooseUs />
       <About/>
-      <AboutSection/>
+      
       <Plans/>
       <Trainers/>
       <RegisterButton/>

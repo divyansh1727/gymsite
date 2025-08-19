@@ -1,41 +1,43 @@
 const functions = require("firebase-functions");
-const nodemailer = require("nodemailer");
 const admin = require("firebase-admin");
+const nodemailer = require("nodemailer");
 admin.initializeApp();
 
-// Gmail setup
+// Configure Nodemailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "thakurdivy84@gmail.com",        // Replace with your Gmail
-    pass: "duqo tmbe nhyg rwyt"     // Use App Password from Google
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,// generated in Google account
+  },
+});
+
+exports.sendRegistrationPDF = functions.firestore
+  .document("registrations/{regId}")
+  .onCreate(async (snap, context) => {
+    try{ 
+    const data = snap.data();
+    const pdfBytes = Uint8Array.from(data.pdfData).buffer;
+
+    
+     await transporter.sendMail({
+  from: "Gym Registration <ritikfitness14@gmail.com>",
+  to: `${data.email}, ritikfitness14@gmail.com`, // send to both user & admin
+  subject: `🏋️ New Gym Registration - ${data.planName} Plan`,
+  text: `New registration received:\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nPlan: ${data.planName}\n\nA PDF receipt is attached.`,
+  attachments: [
+    {
+      filename: `${data.name}_${data.planName}.pdf`,
+      content: pdfBytes,
+    },
+  ],
+});
+
+    
+     console.log("✅ Email sent successfully");
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
   }
 });
-//duqo tmbe nhyg rwyt
+  
 
-// Trigger on new payment document
-exports.sendPDFToAdmin = functions.firestore
-  .document("payments/{paymentId}")
-  .onCreate(async (snap, context) => {
-    const data = snap.data();
-
-    const mailOptions = {
-      from: "thakurdivy84@gmail.com",
-      to: "divys2705@gmail.com",
-      subject: `New Payment by ${data.name}`,
-      html: `<p>${data.name} has purchased a plan.</p>`,
-      attachments: [
-        {
-          filename: "Plan.pdf",
-          path: data.pdfUrl   // Make sure your PDF URL is stored in Firestore
-        }
-      ]
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully!");
-    } catch (error) {
-      console.error("Error sending email:", error);
-    }
-  });
