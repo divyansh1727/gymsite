@@ -1,41 +1,74 @@
 // src/pages/Login.jsx
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { useEffect } from "react";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function Login() {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
   const navigate = useNavigate();
 
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+  // Handle redirect result (after login)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const user = result.user;
 
-      // Check if user is already registered in Firestore
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+          // ✅ Special case: make sure ritikfitness14@gmail.com is always admin
+          if (user.email === "ritikfitness14@gmail.com") {
+            await setDoc(
+              doc(db, "users", user.uid),
+              {
+                email: user.email,
+                role: "admin",
+              },
+              { merge: true }
+            );
+            navigate("/admin");
+            return;
+          }
 
-      if (userSnap.exists()) {
-        // Already registered
-        navigate("/dashboard");
-      } else {
-        // First time login – go to registration
-        navigate("/register");
-      }
-    } catch (err) {
-      console.error("Google sign-in error:", err);
-      alert("Sign-in failed.");
-    }
+          // ✅ Check Firestore for role
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const role = userDoc.data().role;
+            if (role === "admin") {
+              navigate("/admin"); // go straight to admin panel
+            } else {
+              navigate("/dashboard"); // normal student dashboard
+            }
+          } else {
+            // If no Firestore doc exists → go to extra details
+            navigate("/extra-details");
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect login error:", error);
+      });
+  }, [auth, navigate]);
+
+  // Trigger Google Login
+  const handleLogin = () => {
+    signInWithRedirect(auth, provider);
   };
 
   return (
-    <div className="text-center">
-      <button onClick={handleGoogleSignIn} className="btn-google">
-        Continue with Google
+    <div className="flex items-center justify-center min-h-screen bg-neutral-950 text-white">
+      <button
+        onClick={handleLogin}
+        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg"
+      >
+        Sign In with Google
       </button>
     </div>
   );
 }
-
