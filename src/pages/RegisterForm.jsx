@@ -219,29 +219,34 @@ export default function RegisterForm() {
     <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
     <p className="mb-3">Choose a payment method:</p>
 
-    {/** ✅ Just use upiId directly, no need for IIFE */}
     {(() => {
       const upiId = import.meta.env.VITE_UPI_ID;
+      const upiLink = `upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${plan.name}&am=${plan.price}&cu=INR`;
+
+      const handlePay = () => {
+        window.location.href = upiLink; // ✅ ensures intent opens PhonePe/GPay/Paytm
+      };
+
       return (
         <div className="flex flex-col space-y-3">
-          <a
-            href={`upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${plan.name}&am=${plan.price}&cu=INR`}
+          <button
+            onClick={handlePay}
             className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
           >
             Pay with Google Pay
-          </a>
-          <a
-            href={`upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${plan.name}&am=${plan.price}&cu=INR`}
+          </button>
+          <button
+            onClick={handlePay}
             className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
           >
             Pay with PhonePe
-          </a>
-          <a
-            href={`upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${plan.name}&am=${plan.price}&cu=INR`}
+          </button>
+          <button
+            onClick={handlePay}
             className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
           >
             Pay with Paytm
-          </a>
+          </button>
         </div>
       );
     })()}
@@ -257,6 +262,16 @@ export default function RegisterForm() {
     </button>
   </div>
 )}
-</div>
-  );
-}
+
+
+    <p className="mt-4 text-sm text-gray-300">
+      After completing payment, click the button below to confirm.
+    </p>
+    <button
+      onClick={handlePaymentDone}
+      className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2"
+    >
+      I Have Paid
+    </button>
+  </div>
+)}
