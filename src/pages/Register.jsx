@@ -19,12 +19,17 @@ export default function Register() {
     setError("");
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
       if (isAdmin) {
+        // ✅ Admin registration
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           email: user.email,
@@ -33,11 +38,12 @@ export default function Register() {
         });
         navigate("/admin");
       } else {
+        // ✅ Normal gym user registration
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           email: user.email,
           name,
-          role: "student",
+          role: "user", // 🔥 fixed: user not student
           createdAt: new Date(),
         });
         navigate("/dashboard");

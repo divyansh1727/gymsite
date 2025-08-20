@@ -4,7 +4,6 @@ import generatePDF from "../utilis/generatePDF";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
-
 export default function RegisterForm() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,43 +47,67 @@ export default function RegisterForm() {
     setShowPayment(true);
   };
 
-  // Step 2: After payment, generate PDF and download for admin with timestamp
-  const handlePaymentDone = async () => {
-  try {
-    // 1️⃣ Generate PDF (optional: still download if you want)
-    const pdfBlob = await generatePDF(formData, plan);
-
-    // Optional: download locally
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${(now.getMonth()+1)
-      .toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
-      .getHours().toString().padStart(2,"0")}-${now.getMinutes().toString().padStart(2,"0")}`;
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    // 2️⃣ Upload registration data + PDF to Firestore
-    const pdfArrayBuffer = await pdfBlob.arrayBuffer(); // convert blob to binary
-    await addDoc(collection(db, "registrations"), {
-      ...formData,
-      planName: plan.name,
-      planPrice: plan.price,
-      pdfData: Array.from(new Uint8Array(pdfArrayBuffer)), // store binary as array
-      timestamp: serverTimestamp(),
+  // Convert File to Base64 string
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]); // remove `data:...;base64,`
+      reader.onerror = (error) => reject(error);
     });
 
-    alert("Registration complete! Admin will receive the PDF automatically.");
-    navigate("/success");
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong during registration.");
-  }
-};
+  // Step 2: After payment, generate PDF and save
+  const handlePaymentDone = async () => {
+    try {
+      // 1️⃣ Generate PDF blob (optional download)
+      const pdfBlob = await generatePDF(formData, plan);
+
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+        .getHours()
+        .toString()
+        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // 2️⃣ Convert PDF blob to Base64
+      const pdfArrayBuffer = await pdfBlob.arrayBuffer();
+      const pdfBase64 = btoa(
+        new Uint8Array(pdfArrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+
+      // 3️⃣ Convert document file (if uploaded) to Base64
+      let documentBase64 = null;
+      if (formData.document) {
+        documentBase64 = await fileToBase64(formData.document);
+      }
+
+      // 4️⃣ Save registration in Firestore
+      await addDoc(collection(db, "registrations"), {
+        ...formData,
+        planName: plan.name,
+        planPrice: plan.price,
+        pdfBase64, // PDF for Cloud Function email
+        documentBase64, // uploaded PDF from user
+        timestamp: serverTimestamp(),
+        photo: formData.photo, // already Base64 from photo input
+      });
+
+      alert("Registration complete! Admin will receive the PDF automatically.");
+      navigate("/success");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong during registration.");
+    }
+  };
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
@@ -165,8 +188,7 @@ export default function RegisterForm() {
             type="file"
             name="photo"
             accept="image/*"
-            capture="environment"   // 👈 allows camera capture
-
+            capture="environment"
             onChange={(e) => {
               const file = e.target.files[0];
               if (file) {

@@ -10,7 +10,7 @@ import About from "./pages/About";
 import Join from "./pages/Join";
 import Success from "./pages/Success";
 import Testimonials from "./pages/Testimonials";
-import GoogleLogin from "./pages/GoogleLogin";
+import AdminLogin from "./pages/AdminLogin";
 import Register from "./pages/Register";
 import RegisterForm from "./pages/RegisterForm";
 
@@ -31,7 +31,7 @@ import NotAuthorized from "./pages/NotAuthorized";
 
 export default function App() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isAdminRoute = location.pathname.startsWith("/admin") && location.pathname !== "/admin-login";
 
   return (
     <>
@@ -48,14 +48,15 @@ export default function App() {
         <Route path="/join" element={<Join />} />
         <Route path="/success" element={<Success />} />
         <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/login" element={<GoogleLogin />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register/form" element={<RegisterForm />} />
         <Route path="/extra-details" element={<ExtraDetailsForm />} />
         <Route path="/not-authorized" element={<NotAuthorized />} />
 
+        {/* Public Admin Login */}
+        <Route path="/admin-login" element={<AdminLogin />} />
 
-        {/* Admin Routes */}
+        {/* Admin Protected Routes */}
         <Route
           path="/admin"
           element={
@@ -72,11 +73,9 @@ export default function App() {
           <Route path="plans" element={<ManagePlans />} />
           <Route path="add-plan" element={<AddPlan />} />
           <Route path="edit-plan/:id" element={<EditPlan />} />
-
           <Route path="trainers" element={<ManageTrainers />} />
           <Route path="trainers/upload" element={<UploadStaticTrainers />} />
           <Route path="edit-trainer/:id" element={<EditTrainer />} />
-
           <Route path="edit-user/:id" element={<EditUser />} />
           <Route path="testimonials" element={<ManageTestimonials />} />
         </Route>

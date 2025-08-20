@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { Navigate, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function ProtectedAdminRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -12,6 +12,7 @@ export default function ProtectedAdminRoute({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setLoading(false);
         navigate("/login");
         return;
       }
@@ -19,19 +20,17 @@ export default function ProtectedAdminRoute({ children }) {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          const role = userDoc.data().role || "none";
+          const role = userDoc.data().role;
           if (role === "admin") {
-            setIsAdmin(true); // ✅ now updates state
+            setIsAdmin(true);
           } else {
-            console.warn(`Access denied: role is '${role}'`);
             navigate("/not-authorized");
           }
         } else {
-          console.warn("Access denied: no user document found");
           navigate("/not-authorized");
         }
-      } catch (error) {
-        console.error("Error checking admin role:", error);
+      } catch (err) {
+        console.error("Admin check failed:", err);
         navigate("/not-authorized");
       } finally {
         setLoading(false);
@@ -42,8 +41,9 @@ export default function ProtectedAdminRoute({ children }) {
   }, [navigate]);
 
   if (loading) {
-    return <div className="text-white text-center mt-10">Loading...</div>;
+    return <div className="text-white text-center mt-10">Checking access...</div>;
   }
 
   return isAdmin ? children : null;
 }
+//tLKSXjohrudJLprTKSUO3XFgljl2
