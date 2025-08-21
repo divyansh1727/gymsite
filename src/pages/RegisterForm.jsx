@@ -195,7 +195,7 @@ export default function RegisterForm() {
     <p className="mb-3">Choose a payment method:</p>
 
     {(() => {
-      const upiId = "divirajput2358@oksbi"; // directly set here
+      const upiId = "7838548016@ptaxis"; // directly set here
       const upiLink = `upi://pay?pa=${upiId}&am=${plan.price}&cu=INR&tn=${encodeURIComponent(plan.name)}`;
 
 
@@ -227,12 +227,12 @@ export default function RegisterForm() {
     <div className="mt-6">
       <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
       <img
-        src="/src/assets/upi/upi.jpg"
+        src="/src/assets/upi/upi.png"
         alt="UPI QR Code"
         className="mx-auto w-40 h-40 rounded-lg shadow-md"
       />
       <p className="text-xs text-gray-400 mt-2">
-        UPI ID: <span className="font-mono">divirajput2358@oksbi</span>
+        UPI ID: <span className="font-mono">7838548016@ptaxis</span>
       </p>
     </div>
 
