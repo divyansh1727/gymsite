@@ -5,7 +5,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase";
-import {QRCodeCanvas} from "qrcode.react"; 
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -49,15 +49,6 @@ export default function RegisterForm() {
     e.preventDefault();
     setShowPayment(true);
   };
-
-  // Convert File to Base64 string
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = (error) => reject(error);
-    });
 
   // After payment
   const handlePaymentDone = async () => {
@@ -129,6 +120,16 @@ export default function RegisterForm() {
     }
   };
 
+  // ✅ Define UPI details ONCE here
+  const upiId = "ritikraikwar05671@ybl";
+
+  let numericPrice = String(plan.price || "0").replace(/[^0-9.]/g, "").replace(/,/g, "");
+  numericPrice = parseFloat(numericPrice);
+  if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
+
+  const amount = numericPrice.toFixed(2);
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent("Ritik Fitness")}&am=${amount}&cu=INR`;
+
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
       <h2 className="text-2xl font-bold mb-4 text-center">
@@ -198,55 +199,39 @@ export default function RegisterForm() {
           <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
           <p className="mb-3">Choose a payment method:</p>
 
-          {(() => {
-            const upiId = "ritikraikwar05671@ybl"; // ✅ your UPI ID
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={() => openUPIApp(upiLink)}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with Google Pay
+            </button>
+            <button
+              onClick={() => openUPIApp(upiLink)}
+              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with PhonePe
+            </button>
+            <button
+              onClick={() => openUPIApp(upiLink)}
+              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+            >
+              Pay with Paytm
+            </button>
+          </div>
 
-            // ✅ Parse price safely
-            let numericPrice = String(plan.price || "0").replace(/[^0-9.]/g, "").replace(/,/g, "");
-            numericPrice = parseFloat(numericPrice);
-            if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
-
-            const amount = numericPrice.toFixed(2); // always "xx.xx"
-
-            // ✅ Correct UPI link
-            const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent("Ritik Fitness")}&am=${amount}&cu=INR`;
-
-            return (
-              <div className="flex flex-col space-y-3">
-                <button
-                  onClick={() => openUPIApp(upiLink)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
-                >
-                  Pay with Google Pay
-                </button>
-                <button
-                  onClick={() => openUPIApp(upiLink)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
-                >
-                  Pay with PhonePe
-                </button>
-                <button
-                  onClick={() => openUPIApp(upiLink)}
-                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-                >
-                  Pay with Paytm
-                </button>
-              </div>
-            );
-          })()}
-
-          {/* QR fallback */}
+          {/* ✅ QR fallback now works */}
           <div className="mt-6">
             <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
-           <div className="flex justify-center">
-          <QRCodeCanvas
-            value={upiLink}   // 👈 generates QR directly from UPI link
-            size={160}
-            bgColor="#ffffff"
-            fgColor="#000000"
-            className="rounded-lg shadow-md p-2"
-          />
-        </div>
+            <div className="flex justify-center">
+              <QRCodeCanvas
+                value={upiLink}
+                size={160}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                className="rounded-lg shadow-md p-2"
+              />
+            </div>
             <p className="text-xs text-gray-400 mt-2">
               UPI ID: <span className="font-mono">{upiId}</span>
             </p>
