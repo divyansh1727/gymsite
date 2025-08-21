@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase"; 
 
+
 export default function RegisterForm() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -195,19 +196,21 @@ export default function RegisterForm() {
     <p className="mb-3">Choose a payment method:</p>
 
     {(() => {
-      const upiId = "7838548016@ptaxis"; // directly set here
+      const upiId = "7224030844-1@okbizaxis"; // ✅ business UPI ID
 
-      // ✅ Safe numeric conversion
+      // ✅ Clean & safe numeric conversion
       let numericPrice = String(plan.price || "0")
-        .replace(/[^0-9.]/g, "")   // remove all non-numeric except dot
-        .replace(/,/g, "");        // remove commas if present
-      numericPrice = parseFloat(numericPrice); // convert to number
-      if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1; // fallback
+        .replace(/[^0-9.]/g, "")   // remove non-numeric except dot
+        .replace(/,/g, "");        // remove commas
+      numericPrice = parseFloat(numericPrice);
+      if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
 
-      const amount = numericPrice.toFixed(2); // safe 2-decimal string
+      const amount = numericPrice.toFixed(2); // string with 2 decimals
 
-      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${plan.price}&cu=INR`;
-
+      // ✅ Correct UPI link
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
+        plan.name
+      )}&am=${amount}&cu=INR`;
 
       return (
         <div className="flex flex-col space-y-3">
@@ -239,10 +242,10 @@ export default function RegisterForm() {
       <img
         src="/src/assets/upi/upi.jpg"
         alt="UPI QR Code"
-        className="mx-auto w-40 h-40 rounded-lg shadow-md"
+        className="mx-auto w-40 h-40 rounded-lg shadow-md bg-white"
       />
       <p className="text-xs text-gray-400 mt-2">
-        UPI ID: <span className="font-mono">7838548016@ptaxis</span>
+        UPI ID: <span className="font-mono">7224030844-1@okbizaxis</span>
       </p>
     </div>
 
@@ -256,7 +259,8 @@ export default function RegisterForm() {
       I Have Paid
     </button>
   </div>
-)}
+)
+}
 
 </div>
   )}
