@@ -5,7 +5,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase";
-import QRCode from "qrcode.react"; 
+import {QRCodeCanvas} from "qrcode.react"; 
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -239,7 +239,7 @@ export default function RegisterForm() {
           <div className="mt-6">
             <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
            <div className="flex justify-center">
-          <QRCode
+          <QRCodeCanvas
             value={upiLink}   // 👈 generates QR directly from UPI link
             size={160}
             bgColor="#ffffff"
