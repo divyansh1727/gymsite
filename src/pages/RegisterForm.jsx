@@ -196,9 +196,8 @@ export default function RegisterForm() {
 
     {(() => {
       const upiId = "divirajput2358@oksbi"; // directly set here
-      const upiLink = `upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${encodeURIComponent(
-        plan.name
-      )}&am=${plan.price}&cu=INR`;
+      const upiLink = `upi://pay?pa=${upiId}&am=${plan.price}&cu=INR&tn=${encodeURIComponent(plan.name)}`;
+
 
       return (
         <div className="flex flex-col space-y-3">
@@ -228,7 +227,7 @@ export default function RegisterForm() {
     <div className="mt-6">
       <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
       <img
-        src="/src/assets/upi/qr.jpg"
+        src="/src/assets/upi/upi.jpg"
         alt="UPI QR Code"
         className="mx-auto w-40 h-40 rounded-lg shadow-md"
       />
