@@ -190,35 +190,63 @@ export default function RegisterForm() {
       )}
 
       {showPayment && (
-        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-          <p className="mb-3">Choose a payment method:</p>
+  <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
+    <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
+    <p className="mb-3">Choose a payment method:</p>
 
-          {(() => {
-            const upiId = import.meta.env.VITE_UPI_ID;
-            const upiLink = `upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${plan.name}&am=${plan.price}&cu=INR`;
+    {(() => {
+      const upiId = "divirajput2358@oksbi"; // directly set here
+      const upiLink = `upi://pay?pa=${upiId}&pn=Ritik Fitness&tn=${encodeURIComponent(
+        plan.name
+      )}&am=${plan.price}&cu=INR`;
 
-            return (
-              <div className="flex flex-col space-y-3">
-                <button onClick={() => openUPIApp(upiLink)} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
-                  Pay with Google Pay
-                </button>
-                <button onClick={() => openUPIApp(upiLink)} className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg">
-                  Pay with PhonePe
-                </button>
-                <button onClick={() => openUPIApp(upiLink)} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
-                  Pay with Paytm
-                </button>
-              </div>
-            );
-          })()}
-
-          <p className="mt-4 text-sm text-gray-300">After completing payment, click the button below to confirm.</p>
-          <button onClick={handlePaymentDone} className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2">
-            I Have Paid
+      return (
+        <div className="flex flex-col space-y-3">
+          <button
+            onClick={() => openUPIApp(upiLink)}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+          >
+            Pay with Google Pay
+          </button>
+          <button
+            onClick={() => openUPIApp(upiLink)}
+            className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
+          >
+            Pay with PhonePe
+          </button>
+          <button
+            onClick={() => openUPIApp(upiLink)}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+          >
+            Pay with Paytm
           </button>
         </div>
-      )}
+      );
+    })()}
+
+    {/* QR fallback */}
+    <div className="mt-6">
+      <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
+      <img
+        src="/src/assets/upi/qr.jpg"
+        alt="UPI QR Code"
+        className="mx-auto w-40 h-40 rounded-lg shadow-md"
+      />
+      <p className="text-xs text-gray-400 mt-2">
+        UPI ID: <span className="font-mono">divirajput2358@oksbi</span>
+      </p>
     </div>
-  );
-}
+
+    <p className="mt-4 text-sm text-gray-300">
+      After completing payment, click the button below to confirm.
+    </p>
+    <button
+      onClick={handlePaymentDone}
+      className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2 text-white"
+    >
+      I Have Paid
+    </button>
+  </div>
+)}
+</div>
+  )}
