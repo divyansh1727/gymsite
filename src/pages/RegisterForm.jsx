@@ -196,8 +196,9 @@ export default function RegisterForm() {
 
     {(() => {
       const upiId = "7838548016@ptaxis"; // directly set here
-      const amount = plan.price.toFixed(2);
-const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${amount}&cu=INR`;
+      const numericPrice = Number(plan.price);
+      const amount = isNaN(numericPrice) ? 0 : numericPrice.toFixed(2);
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${amount}&cu=INR`;
 
 
 
