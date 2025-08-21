@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import Logo from "../assets/logo/logo.png"; // adjust path if needed
+
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -21,14 +23,14 @@ export default function Navbar() {
                  flex justify-between items-center
                  bg-gradient-to-r from-purple-800 via-blue-900 to-black"
     >
-      <motion.h1
-        className="text-3xl font-extrabold italic text-white drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        FitZone
-      </motion.h1>
+      <motion.img
+  src={Logo}
+  alt="FitZone Logo"
+  className="w-16 h-16 drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]"
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+/>
 
       {/* Desktop Nav */}
       <div className="hidden md:flex gap-8 text-lg">
