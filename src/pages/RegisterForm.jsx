@@ -4,8 +4,8 @@ import generatePDF from "../utilis/generatePDF";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase"; 
-
+import { storage } from "../firebase";
+import QRCode from "qrcode.react"; 
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -112,13 +112,10 @@ export default function RegisterForm() {
     }
   };
 
-  // ✅ New universal UPI opener
+  // ✅ Universal UPI opener
   const openUPIApp = (upiLink) => {
     try {
-      // First try direct redirect
       window.location.href = upiLink;
-
-      // Fallback with hidden iframe
       setTimeout(() => {
         const iframe = document.createElement("iframe");
         iframe.style.display = "none";
@@ -172,16 +169,22 @@ export default function RegisterForm() {
 
           <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
 
-          <input type="file" name="photo" accept="image/*" capture="environment" onChange={(e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setFormData((prev) => ({ ...prev, photo: reader.result }));
-              };
-              reader.readAsDataURL(file);
-            }
-          }} />
+          <input
+            type="file"
+            name="photo"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setFormData((prev) => ({ ...prev, photo: reader.result }));
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
           <input type="file" name="document" onChange={handleChange} />
 
           <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
@@ -191,76 +194,75 @@ export default function RegisterForm() {
       )}
 
       {showPayment && (
-  <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-    <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-    <p className="mb-3">Choose a payment method:</p>
+        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
+          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
+          <p className="mb-3">Choose a payment method:</p>
 
-    {(() => {
-      const upiId = "ritikraikwar05671@ybl"; // ✅ business UPI ID
+          {(() => {
+            const upiId = "ritikraikwar05671@ybl"; // ✅ your UPI ID
 
-      // ✅ Clean & safe numeric conversion
-      let numericPrice = String(plan.price || "0")
-        .replace(/[^0-9.]/g, "")   // remove non-numeric except dot
-        .replace(/,/g, "");        // remove commas
-      numericPrice = parseFloat(numericPrice);
-      if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
+            // ✅ Parse price safely
+            let numericPrice = String(plan.price || "0").replace(/[^0-9.]/g, "").replace(/,/g, "");
+            numericPrice = parseFloat(numericPrice);
+            if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
 
-      const amount = numericPrice.toFixed(2); // string with 2 decimals
+            const amount = numericPrice.toFixed(2); // always "xx.xx"
 
-      // ✅ Correct UPI link
-      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
-        plan.name
-      )}&am=${amount}&cu=INR`;
+            // ✅ Correct UPI link
+            const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent("Ritik Fitness")}&am=${amount}&cu=INR`;
 
-      return (
-        <div className="flex flex-col space-y-3">
+            return (
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={() => openUPIApp(upiLink)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+                >
+                  Pay with Google Pay
+                </button>
+                <button
+                  onClick={() => openUPIApp(upiLink)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
+                >
+                  Pay with PhonePe
+                </button>
+                <button
+                  onClick={() => openUPIApp(upiLink)}
+                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+                >
+                  Pay with Paytm
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* QR fallback */}
+          <div className="mt-6">
+            <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
+           <div className="flex justify-center">
+          <QRCode
+            value={upiLink}   // 👈 generates QR directly from UPI link
+            size={160}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            className="rounded-lg shadow-md p-2"
+          />
+        </div>
+            <p className="text-xs text-gray-400 mt-2">
+              UPI ID: <span className="font-mono">{upiId}</span>
+            </p>
+          </div>
+
+          <p className="mt-4 text-sm text-gray-300">
+            After completing payment, click the button below to confirm.
+          </p>
           <button
-            onClick={() => openUPIApp(upiLink)}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+            onClick={handlePaymentDone}
+            className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2 text-white"
           >
-            Pay with Google Pay
-          </button>
-          <button
-            onClick={() => openUPIApp(upiLink)}
-            className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
-          >
-            Pay with PhonePe
-          </button>
-          <button
-            onClick={() => openUPIApp(upiLink)}
-            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-          >
-            Pay with Paytm
+            I Have Paid
           </button>
         </div>
-      );
-    })()}
-
-    {/* QR fallback */}
-    <div className="mt-6">
-      <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
-      <img
-        src="/src/assets/upi/upi.jpg"
-        alt="UPI QR Code"
-        className="mx-auto w-40 h-40 rounded-lg shadow-md bg-white"
-      />
-      <p className="text-xs text-gray-400 mt-2">
-        UPI ID: <span className="font-mono">ritikraikwar05671@ybl</span>
-      </p>
+      )}
     </div>
-
-    <p className="mt-4 text-sm text-gray-300">
-      After completing payment, click the button below to confirm.
-    </p>
-    <button
-      onClick={handlePaymentDone}
-      className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2 text-white"
-    >
-      I Have Paid
-    </button>
-  </div>
-)
+  );
 }
-
-</div>
-  )}
