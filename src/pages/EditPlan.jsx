@@ -10,7 +10,7 @@ export default function EditPlan() {
 
   const [plan, setPlan] = useState({
     name: "",
-    price: "",
+    price: "", // still string in input
     duration: "",
     features: [],
   });
@@ -25,7 +25,7 @@ export default function EditPlan() {
         const data = docSnap.data();
         setPlan({
           name: data.name || "",
-          price: data.price || "",
+          price: data.price?.toString() || "", // ensure input shows string
           duration: data.duration || "",
           features: data.features || [],
         });
@@ -47,8 +47,16 @@ export default function EditPlan() {
       return;
     }
 
+    // Convert price to number safely
+    const numericPrice = Number(plan.price.replace(/[^0-9.]/g, ""));
+    if (isNaN(numericPrice)) {
+      alert("Price must be a valid number.");
+      return;
+    }
+
     const updatedPlan = {
       ...plan,
+      price: numericPrice, // store numeric value in Firestore
       features: featuresText
         .split(",")
         .map((f) => f.trim())
@@ -74,17 +82,16 @@ export default function EditPlan() {
           placeholder="Plan Name"
           className="p-2 rounded bg-gray-800"
         />
-       <div className="relative">
-  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
-  <input
-    name="price"
-    value={plan.price}
-    onChange={handleChange}
-    placeholder="Price"
-    className="pl-6 p-2 rounded bg-gray-800 w-full"
-  />
-</div>
-
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+          <input
+            name="price"
+            value={plan.price}
+            onChange={handleChange}
+            placeholder="Price"
+            className="pl-6 p-2 rounded bg-gray-800 w-full"
+          />
+        </div>
         <input
           name="duration"
           value={plan.duration}
