@@ -196,7 +196,7 @@ export default function RegisterForm() {
     <p className="mb-3">Choose a payment method:</p>
 
     {(() => {
-      const upiId = "7224030844-1@okbizaxis"; // ✅ business UPI ID
+      const upiId = "11259928040@okbizaxis"; // ✅ business UPI ID
 
       // ✅ Clean & safe numeric conversion
       let numericPrice = String(plan.price || "0")
@@ -245,7 +245,7 @@ export default function RegisterForm() {
         className="mx-auto w-40 h-40 rounded-lg shadow-md bg-white"
       />
       <p className="text-xs text-gray-400 mt-2">
-        UPI ID: <span className="font-mono">7224030844-1@okbizaxis</span>
+        UPI ID: <span className="font-mono">11259928040@okbizaxis</span>
       </p>
     </div>
 
