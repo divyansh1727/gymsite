@@ -196,11 +196,17 @@ export default function RegisterForm() {
 
     {(() => {
       const upiId = "7838548016@ptaxis"; // directly set here
-      const numericPrice =  Number(String(plan.price).replace(/[^0-9.]/g, ""));
-      const amount = isNaN(numericPrice) ? 0 : numericPrice.toFixed(2);
+
+      // ✅ Safe numeric conversion
+      let numericPrice = String(plan.price || "0")
+        .replace(/[^0-9.]/g, "")   // remove all non-numeric except dot
+        .replace(/,/g, "");        // remove commas if present
+      numericPrice = parseFloat(numericPrice); // convert to number
+      if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1; // fallback
+
+      const amount = numericPrice.toFixed(2); // safe 2-decimal string
+
       const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${amount}&cu=INR`;
-
-
 
       return (
         <div className="flex flex-col space-y-3">
@@ -250,5 +256,6 @@ export default function RegisterForm() {
     </button>
   </div>
 )}
+
 </div>
   )}
