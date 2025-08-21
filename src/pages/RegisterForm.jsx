@@ -206,7 +206,8 @@ export default function RegisterForm() {
 
       const amount = numericPrice.toFixed(2); // safe 2-decimal string
 
-      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${amount}&cu=INR`;
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(plan.name)}&am=${plan.price}&cu=INR`;
+
 
       return (
         <div className="flex flex-col space-y-3">
