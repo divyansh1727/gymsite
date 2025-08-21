@@ -236,7 +236,7 @@ export default function RegisterForm() {
     <div className="mt-6">
       <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
       <img
-        src="/src/assets/upi/upi.png"
+        src="/src/assets/upi/upi.jpg"
         alt="UPI QR Code"
         className="mx-auto w-40 h-40 rounded-lg shadow-md"
       />
