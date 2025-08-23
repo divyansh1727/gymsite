@@ -26,8 +26,16 @@ export default function RegisterForm() {
   });
 
   const [showConfirmButton, setShowConfirmButton] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Online"); // ✅ Toggle state
 
-  const healthOptions = ["Asthma", "Diabetes", "Heart Issues", "Joint Pain", "Back Pain", "Other"];
+  const healthOptions = [
+    "Asthma",
+    "Diabetes",
+    "Heart Issues",
+    "Joint Pain",
+    "Back Pain",
+    "Other",
+  ];
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -70,14 +78,20 @@ export default function RegisterForm() {
       URL.revokeObjectURL(url);
 
       // Upload PDF to Firebase Storage
-      const pdfRef = ref(storage, `registrations/${formData.name}_${timestamp}.pdf`);
+      const pdfRef = ref(
+        storage,
+        `registrations/${formData.name}_${timestamp}.pdf`
+      );
       await uploadBytes(pdfRef, pdfBlob);
       const pdfURL = await getDownloadURL(pdfRef);
 
       // Upload user document
       let documentURL = null;
       if (formData.document) {
-        const docRef = ref(storage, `documents/${formData.document.name}_${timestamp}`);
+        const docRef = ref(
+          storage,
+          `documents/${formData.document.name}_${timestamp}`
+        );
         await uploadBytes(docRef, formData.document);
         documentURL = await getDownloadURL(docRef);
       }
@@ -87,6 +101,7 @@ export default function RegisterForm() {
         ...formData,
         planName: plan.name,
         planPrice: plan.price,
+        paymentMethod, // ✅ Save payment type
         pdfURL,
         documentURL,
         timestamp: serverTimestamp(),
@@ -102,16 +117,20 @@ export default function RegisterForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setShowConfirmButton(true); // Show "I Have Paid" button after form submit
+    setShowConfirmButton(true); // ✅ Show toggle after submit
   };
 
   // ✅ UPI QR logic
   const upiId = "ritikraikwar05671@ybl";
-  let numericPrice = String(plan.price || "0").replace(/[^0-9.]/g, "").replace(/,/g, "");
+  let numericPrice = String(plan.price || "0")
+    .replace(/[^0-9.]/g, "")
+    .replace(/,/g, "");
   numericPrice = parseFloat(numericPrice);
   if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
   const amount = numericPrice.toFixed(2);
-  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent("Ritik Fitness")}&am=${amount}&cu=INR`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
+    "Ritik Fitness"
+  )}&am=${amount}&cu=INR`;
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
@@ -121,18 +140,47 @@ export default function RegisterForm() {
 
       {/* ✅ Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-        <input name="email" type="email" placeholder="Email" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-        <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <input
+          name="name"
+          placeholder="Full Name"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        />
+        <input
+          name="phone"
+          placeholder="Phone Number"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        />
 
-        <select name="gender" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+        <select
+          name="gender"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        >
           <option value="">Select Gender</option>
           <option>Male</option>
           <option>Female</option>
           <option>Other</option>
         </select>
 
-        <select name="bloodGroup" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+        <select
+          name="bloodGroup"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        >
           <option value="">Select Blood Group</option>
           {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => (
             <option key={g}>{g}</option>
@@ -144,14 +192,24 @@ export default function RegisterForm() {
           <div className="grid grid-cols-2 gap-2">
             {healthOptions.map((opt) => (
               <label key={opt} className="flex items-center space-x-2">
-                <input type="checkbox" value={opt} onChange={handleCheckboxChange} />
+                <input
+                  type="checkbox"
+                  value={opt}
+                  onChange={handleCheckboxChange}
+                />
                 <span>{opt}</span>
               </label>
             ))}
           </div>
         </div>
 
-        <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <textarea
+          name="address"
+          placeholder="Address"
+          onChange={handleChange}
+          className="w-full p-3 rounded-lg bg-neutral-800"
+          required
+        />
 
         <input
           type="file"
@@ -171,43 +229,80 @@ export default function RegisterForm() {
         />
         <input type="file" name="document" onChange={handleChange} />
 
-        <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
+        <button
+          type="submit"
+          className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700"
+        >
           Submit
         </button>
       </form>
 
-      {/* ✅ UPI QR Code */}
-      {/* ✅ UPI QR Code + Confirm Button */}
-<div className="mt-8 p-6 bg-neutral-900 border-2 border-green-500 rounded-2xl shadow-lg flex flex-col items-center text-center">
-  <p className="text-lg font-semibold text-green-400 mb-4">
-    Optional Payment via UPI
-  </p>
+      {/* ✅ Payment Toggle after Submit (Pill Style) */}
+      {showConfirmButton && (
+        <div className="mt-6 text-center">
+          <h3 className="text-lg font-semibold mb-3">Select Payment Method</h3>
+          <div className="flex bg-neutral-800 rounded-full p-1 shadow-inner w-full max-w-xs mx-auto">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("Online")}
+              className={`flex-1 py-2 rounded-full text-sm font-medium transition ${
+                paymentMethod === "Online"
+                  ? "bg-pink-600 text-white"
+                  : "text-gray-300 hover:bg-gray-600"
+              }`}
+            >
+              Online
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("Cash")}
+              className={`flex-1 py-2 rounded-full text-sm font-medium transition ${
+                paymentMethod === "Cash"
+                  ? "bg-pink-600 text-white"
+                  : "text-gray-300 hover:bg-gray-600"
+              }`}
+            >
+              Cash
+            </button>
+          </div>
+        </div>
+      )}
 
-  <div className="p-4 bg-black rounded-xl shadow-[0_0_20px_#39FF14] mb-4">
-    <QRCodeCanvas
-      value={upiLink}
-      size={180}
-      bgColor="#ffffff"
-      fgColor="#000000"
-      className="rounded-lg shadow-md p-2"
-    />
-  </div>
+      {/* ✅ If Online → Show QR */}
+      {showConfirmButton && paymentMethod === "Online" && (
+        <div className="mt-8 p-6 bg-neutral-900 border-2 border-green-500 rounded-2xl shadow-lg flex flex-col items-center text-center">
+          <p className="text-lg font-semibold text-green-400 mb-4">
+            Pay via UPI
+          </p>
 
-  <p className="text-sm text-gray-300 mb-4">
-    Scan this QR with any UPI app or use UPI ID:{" "}
-    <span className="font-mono text-green-400">{upiId}</span>
-  </p>
+          <div className="p-4 bg-black rounded-xl shadow-[0_0_20px_#39FF14] mb-4">
+            <QRCodeCanvas
+              value={upiLink}
+              size={180}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              className="rounded-lg shadow-md p-2"
+            />
+          </div>
 
-  {showConfirmButton && (
-    <button
-      onClick={handlePaymentDone}
-      className="mt-2 bg-green-500 hover:bg-green-600 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl text-white font-semibold transition-all duration-200"
-    >
-      I Have Paid / Confirm Registration
-    </button>
-  )}
-</div>
+          <p className="text-sm text-gray-300 mb-4">
+            Scan QR or use UPI ID:{" "}
+            <span className="font-mono text-green-400">{upiId}</span>
+          </p>
+        </div>
+      )}
 
+      {/* ✅ Confirm Button (Both Online + Cash) */}
+      {showConfirmButton && (
+        <button
+          onClick={handlePaymentDone}
+          className="mt-4 bg-green-500 hover:bg-green-600 shadow-lg px-6 py-3 rounded-xl text-white font-semibold w-full"
+        >
+          {paymentMethod === "Online"
+            ? "I Have Paid / Confirm Registration"
+            : "Confirm Cash Registration"}
+        </button>
+      )}
     </div>
   );
 }

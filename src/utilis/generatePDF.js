@@ -14,6 +14,7 @@ export default async function generatePDF(formData, plan) {
   doc.text(`Gender: ${formData.gender}`, 20, 80);
   doc.text(`Blood Group: ${formData.bloodGroup}`, 20, 90);
   doc.text(`Address: ${formData.address}`, 20, 100);
+  doc.text(`Mode: ${formData.mode}`, 20, 110);
 
   if (formData.previousHealthProblems?.length > 0) {
     doc.text(

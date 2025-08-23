@@ -1,53 +1,62 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
+const PDFDocument = require("pdfkit");
+
 admin.initializeApp();
 
-// Configure Nodemailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER, // your Gmail
-    pass: process.env.EMAIL_PASS, // app password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // your Gmail app password
   },
 });
 
 exports.sendRegistrationPDF = functions.firestore
-  .document("registrations/{regId}")
+  .document("users/{userId}") // adjust collection name if different
   .onCreate(async (snap, context) => {
+    const data = snap.data();
+
     try {
-      const data = snap.data();
+      // Create PDF
+      const doc = new PDFDocument();
+      let buffers = [];
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", async () => {
+        const pdfData = Buffer.concat(buffers);
 
-      const attachments = [];
+        // Mail options
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: "admin@gmail.com", // change to your admin email
+          subject: "New Registration PDF",
+          text: "A new registration has been submitted. See attached PDF.",
+          attachments: [
+            {
+              filename: "registration.pdf",
+              content: pdfData,
+            },
+          ],
+        };
 
-      // ✅ Generated PDF
-      if (data.pdfBase64) {
-        const pdfBuffer = Buffer.from(data.pdfBase64, "base64");
-        attachments.push({
-          filename: `${data.name}_${data.planName}_Generated.pdf`,
-          content: pdfBuffer,
-        });
-      }
-
-      // ✅ User-uploaded PDF
-      if (data.documentBase64) {
-        const docBuffer = Buffer.from(data.documentBase64, "base64");
-        attachments.push({
-          filename: `${data.name}_${data.planName}_UserDocument.pdf`,
-          content: docBuffer,
-        });
-      }
-
-      await transporter.sendMail({
-        from: `Gym Registration <${process.env.EMAIL_USER}>`,
-        to: `ritikfitness14@gmail.com, ${data.email}`, // admin + user
-        subject: `🏋️ New Gym Registration - ${data.planName} Plan`,
-        text: `New registration received:\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nPlan: ${data.planName}\n\nPDFs are attached.`,
-        attachments,
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log("Email sent with PDF!");
       });
 
-      console.log("✅ Email sent successfully to admin and user!");
+      // PDF Content
+      doc.fontSize(18).text("Registration Details", { underline: true });
+      doc.moveDown();
+
+      doc.fontSize(12).text(`Name: ${data.name || ""}`);
+      doc.text(`Email: ${data.email || ""}`);
+      doc.text(`Phone: ${data.phone || ""}`);
+      doc.text(`Payment Method: ${data.paymentMethod || "Not Provided"}`); // ✅ added
+      // Add any other fields you need
+
+      doc.end();
     } catch (error) {
-      console.error("❌ Error sending email:", error);
+      console.error("Error sending registration PDF:", error);
     }
   });

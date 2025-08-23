@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 import About from "../pages/About";
 import RegisterButton from "../components/RegisterButton";
 import Plans from "../pages/Plans";
-import Contact from "./Contact";
+import Contact from "../pages/Contact";
 
 export default function Home() {
   return (
