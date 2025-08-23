@@ -12,7 +12,7 @@ export default function Footer() {
         {/* Brand */}
         <div>
           <h2 className="text-3xl font-extrabold text-green-400 mb-4 font-mono">
-            FitZone
+            TFB
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed">
             Transform your body and mind. Join the best fitness community with

@@ -34,7 +34,7 @@ export default function WhyChooseUs() {
       <div className="max-w-6xl mx-auto text-center">
         {/* Section Heading */}
         <h2 className="text-4xl md:text-5xl font-[Dancing_Script] font-bold text-white mb-14">
-          Why Choose FitZone?
+          Why Choose TFB?
         </h2>
       </div>
 

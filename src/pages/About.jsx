@@ -23,7 +23,7 @@ export default function About() {
         >
           At{" "}
           <span className="text-purple-400 font-semibold italic">
-            BeastMode Gym
+            The Fitness Beast Gym
           </span>
           , we believe in transforming lives through{" "}
           <span className="text-white font-semibold">fitness, discipline,</span>{" "}

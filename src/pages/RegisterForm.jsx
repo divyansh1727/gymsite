@@ -25,7 +25,8 @@ export default function RegisterForm() {
     document: null,
   });
 
-  const [showPayment, setShowPayment] = useState(false);
+  const [showConfirmButton, setShowConfirmButton] = useState(false);
+
   const healthOptions = ["Asthma", "Diabetes", "Heart Issues", "Joint Pain", "Back Pain", "Other"];
 
   const handleChange = (e) => {
@@ -45,12 +46,7 @@ export default function RegisterForm() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setShowPayment(true);
-  };
-
-  // After payment
+  // ✅ handle PDF generation + Firestore save
   const handlePaymentDone = async () => {
     try {
       const pdfBlob = await generatePDF(formData, plan);
@@ -63,6 +59,7 @@ export default function RegisterForm() {
         .toString()
         .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
+      // Download PDF locally
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;
@@ -72,7 +69,7 @@ export default function RegisterForm() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Upload generated PDF
+      // Upload PDF to Firebase Storage
       const pdfRef = ref(storage, `registrations/${formData.name}_${timestamp}.pdf`);
       await uploadBytes(pdfRef, pdfBlob);
       const pdfURL = await getDownloadURL(pdfRef);
@@ -85,7 +82,7 @@ export default function RegisterForm() {
         documentURL = await getDownloadURL(docRef);
       }
 
-      // Save metadata
+      // Save metadata to Firestore
       await addDoc(collection(db, "registrations"), {
         ...formData,
         planName: plan.name,
@@ -103,30 +100,16 @@ export default function RegisterForm() {
     }
   };
 
-  // ✅ Universal UPI opener
-  const openUPIApp = (upiLink) => {
-    try {
-      window.location.href = upiLink;
-      setTimeout(() => {
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = upiLink;
-        document.body.appendChild(iframe);
-        setTimeout(() => document.body.removeChild(iframe), 2000);
-      }, 500);
-    } catch (err) {
-      console.error("UPI launch failed:", err);
-      alert("Could not open payment app. Please open your UPI app manually.");
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setShowConfirmButton(true); // Show "I Have Paid" button after form submit
   };
 
-  // ✅ Define UPI details ONCE here
+  // ✅ UPI QR logic
   const upiId = "ritikraikwar05671@ybl";
-
   let numericPrice = String(plan.price || "0").replace(/[^0-9.]/g, "").replace(/,/g, "");
   numericPrice = parseFloat(numericPrice);
   if (isNaN(numericPrice) || numericPrice <= 0) numericPrice = 1;
-
   const amount = numericPrice.toFixed(2);
   const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent("Ritik Fitness")}&am=${amount}&cu=INR`;
 
@@ -136,118 +119,95 @@ export default function RegisterForm() {
         Register for {plan.name} - {plan.price}
       </h2>
 
-      {!showPayment && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-          <input name="email" type="email" placeholder="Email" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+      {/* ✅ Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <input name="email" type="email" placeholder="Email" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+        <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
 
-          <select name="gender" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
-            <option value="">Select Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
+        <select name="gender" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+          <option value="">Select Gender</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
 
-          <select name="bloodGroup" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
-            <option value="">Select Blood Group</option>
-            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => (
-              <option key={g}>{g}</option>
+        <select name="bloodGroup" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required>
+          <option value="">Select Blood Group</option>
+          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => (
+            <option key={g}>{g}</option>
+          ))}
+        </select>
+
+        <div>
+          <label>Previous Health Problems:</label>
+          <div className="grid grid-cols-2 gap-2">
+            {healthOptions.map((opt) => (
+              <label key={opt} className="flex items-center space-x-2">
+                <input type="checkbox" value={opt} onChange={handleCheckboxChange} />
+                <span>{opt}</span>
+              </label>
             ))}
-          </select>
-
-          <div>
-            <label>Previous Health Problems:</label>
-            <div className="grid grid-cols-2 gap-2">
-              {healthOptions.map((opt) => (
-                <label key={opt} className="flex items-center space-x-2">
-                  <input type="checkbox" value={opt} onChange={handleCheckboxChange} />
-                  <span>{opt}</span>
-                </label>
-              ))}
-            </div>
           </div>
-
-          <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
-
-          <input
-            type="file"
-            name="photo"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setFormData((prev) => ({ ...prev, photo: reader.result }));
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-          />
-          <input type="file" name="document" onChange={handleChange} />
-
-          <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
-            Submit
-          </button>
-        </form>
-      )}
-
-      {showPayment && (
-        <div className="mt-6 bg-neutral-800 p-4 rounded-lg text-center">
-          <h3 className="text-lg font-bold mb-2">Complete Your Payment</h3>
-          <p className="mb-3">Choose a payment method:</p>
-
-          <div className="flex flex-col space-y-3">
-            <button
-              onClick={() => openUPIApp(upiLink)}
-              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
-            >
-              Pay with Google Pay
-            </button>
-            <button
-              onClick={() => openUPIApp(upiLink)}
-              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg"
-            >
-              Pay with PhonePe
-            </button>
-            <button
-              onClick={() => openUPIApp(upiLink)}
-              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-            >
-              Pay with Paytm
-            </button>
-          </div>
-
-          {/* ✅ QR fallback now works */}
-          <div className="mt-6">
-            <p className="text-sm text-gray-300 mb-2">Or scan this QR to pay:</p>
-            <div className="flex justify-center">
-              <QRCodeCanvas
-                value={upiLink}
-                size={160}
-                bgColor="#ffffff"
-                fgColor="#000000"
-                className="rounded-lg shadow-md p-2"
-              />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              UPI ID: <span className="font-mono">{upiId}</span>
-            </p>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-300">
-            After completing payment, click the button below to confirm.
-          </p>
-          <button
-            onClick={handlePaymentDone}
-            className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg mt-2 text-white"
-          >
-            I Have Paid
-          </button>
         </div>
-      )}
+
+        <textarea name="address" placeholder="Address" onChange={handleChange} className="w-full p-3 rounded-lg bg-neutral-800" required />
+
+        <input
+          type="file"
+          name="photo"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setFormData((prev) => ({ ...prev, photo: reader.result }));
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
+        <input type="file" name="document" onChange={handleChange} />
+
+        <button type="submit" className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700">
+          Submit
+        </button>
+      </form>
+
+      {/* ✅ UPI QR Code */}
+      {/* ✅ UPI QR Code + Confirm Button */}
+<div className="mt-8 p-6 bg-neutral-900 border-2 border-green-500 rounded-2xl shadow-lg flex flex-col items-center text-center">
+  <p className="text-lg font-semibold text-green-400 mb-4">
+    Optional Payment via UPI
+  </p>
+
+  <div className="p-4 bg-black rounded-xl shadow-[0_0_20px_#39FF14] mb-4">
+    <QRCodeCanvas
+      value={upiLink}
+      size={180}
+      bgColor="#ffffff"
+      fgColor="#000000"
+      className="rounded-lg shadow-md p-2"
+    />
+  </div>
+
+  <p className="text-sm text-gray-300 mb-4">
+    Scan this QR with any UPI app or use UPI ID:{" "}
+    <span className="font-mono text-green-400">{upiId}</span>
+  </p>
+
+  {showConfirmButton && (
+    <button
+      onClick={handlePaymentDone}
+      className="mt-2 bg-green-500 hover:bg-green-600 shadow-lg hover:shadow-xl px-6 py-3 rounded-xl text-white font-semibold transition-all duration-200"
+    >
+      I Have Paid / Confirm Registration
+    </button>
+  )}
+</div>
+
     </div>
   );
 }

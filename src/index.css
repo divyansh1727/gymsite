@@ -1,5 +1,7 @@
-/* ✅ Keep all @imports at the top */
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap');
+/* ✅ Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap');
+
+/* ✅ Tailwind base setup */
 @import "tailwindcss";
 
 /* ✅ Tailwind layers */
@@ -7,11 +9,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ Custom styles */
+/* ✅ Font setup */
 body {
+  font-family: 'Inter', sans-serif;
   @apply bg-black text-white;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ✅ Neon text effect */
 .neon-text {
   color: #39FF14;
   text-shadow:
@@ -29,6 +37,7 @@ body {
   color: #39FF14;
 }
 
+/* ✅ Fullscreen layout support */
 html, body, #root, canvas {
   height: 100%;
   width: 100%;
@@ -36,6 +45,7 @@ html, body, #root, canvas {
   padding: 0;
 }
 
+/* ✅ Particle background */
 #tsparticles {
   position: absolute;
   width: 100%;
@@ -43,7 +53,6 @@ html, body, #root, canvas {
   z-index: 0;
   pointer-events: none;
 }
-
 
 
 
