@@ -7,6 +7,7 @@ import Footer from "../components/Footer";
 import About from "../pages/About";
 import RegisterButton from "../components/RegisterButton";
 import Plans from "../pages/Plans";
+import Contact from "./Contact";
 
 export default function Home() {
   return (
@@ -31,6 +32,7 @@ export default function Home() {
       </div>
 
       <Testimonials />
+      <Contact/>
       <Footer />
     </div>
   );

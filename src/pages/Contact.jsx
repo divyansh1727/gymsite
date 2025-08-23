@@ -47,17 +47,17 @@ export default function Contact() {
         <div className="space-y-6 text-lg">
           <div>
             <h3 className="text-2xl font-bold text-neon mb-2">Location</h3>
-            <p>Near Kedareshwar Mandir,Laxmi Nagar</p>
+            <p>M Square building ,First Floor,Near Kedareshwar Mahadev Mandir,Laxmi Nagar Colony,Ujjain</p>
           </div>
 
           <div>
             <h3 className="text-2xl font-bold text-neon mb-2">Email</h3>
-            <p>support@gymfit.com</p>
+            <p>fitnessbeastgym@gmail.com</p>
           </div>
 
           <div>
             <h3 className="text-2xl font-bold text-neon mb-2">Phone</h3>
-            <p>+91 98765 43210</p>
+            <p>+91 72240 30844</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,8 @@
 /* ✅ Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+
+
 
 /* ✅ Tailwind base setup */
 @import "tailwindcss";
@@ -37,6 +40,7 @@ h1, h2, h3, h4, h5, h6 {
 .hover\:text-neon:hover {
   color: #39FF14;
 }
+
 
 /* ✅ Fullscreen layout support */
 html, body, #root, canvas {

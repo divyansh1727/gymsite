@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { FaDumbbell, FaWind, FaRunning, FaCrown } from "react-icons/fa";
 
 export default function About() {
   return (
@@ -9,7 +10,7 @@ export default function About() {
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold italic text-center mb-12 drop-shadow-[0_0_15px_rgba(139,92,246,0.8)]"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-center mb-12 drop-shadow-[0_0_15px_rgba(139,92,246,0.8)]"
         >
           About Our Gym
         </motion.h1>
@@ -19,10 +20,10 @@ export default function About() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.9 }}
-          className="text-lg md:text-xl font-[cursive] text-gray-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] text-center max-w-3xl mx-auto mb-12 leading-relaxed"
+          className="text-lg md:text-xl text-gray-200 text-center max-w-3xl mx-auto mb-12 leading-relaxed drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
         >
           At{" "}
-          <span className="text-purple-400 font-semibold italic">
+          <span className="text-purple-400 font-semibold">
             The Fitness Beast Gym
           </span>
           , we believe in transforming lives through{" "}
@@ -41,12 +42,13 @@ export default function About() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5, duration: 0.9 }}
           >
-            <h2 className="text-2xl md:text-3xl font-extrabold italic text-purple-400 mb-3 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-purple-400 mb-3 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
               Our Mission
             </h2>
-            <p className="text-lg font-[cursive] leading-relaxed drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">
-              To inspire and empower individuals to embrace a healthy lifestyle by
-              providing world-class fitness training and a supportive environment.
+            <p className="text-lg leading-relaxed drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">
+              To inspire and empower individuals to embrace a healthy lifestyle
+              by providing world-class fitness training and a supportive
+              environment.
             </p>
           </motion.div>
 
@@ -55,26 +57,56 @@ export default function About() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.7, duration: 0.9 }}
           >
-            <h2 className="text-2xl md:text-3xl font-extrabold italic text-purple-400 mb-3 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-purple-400 mb-3 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
               Our Vision
             </h2>
-            <p className="text-lg font-[cursive] leading-relaxed drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">
+            <p className="text-lg leading-relaxed drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">
               To become the leading fitness destination where physical strength,
               mental toughness, and community come together to change lives.
             </p>
           </motion.div>
         </div>
 
+        {/* We Provide Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1, duration: 0.8 }}
+          className="bg-gradient-to-br from-purple-700/30 to-blue-900/30 backdrop-blur-md border border-purple-500/40 rounded-2xl p-8 mt-16 shadow-xl text-center"
+        >
+          <h2 className="text-3xl font-extrabold text-purple-400 mb-6 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
+            We Provide
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-6 text-lg text-gray-200 font-semibold">
+            <div className="flex items-center gap-3">
+              <FaRunning className="text-purple-400 text-2xl" />
+              CrossFit Zone
+            </div>
+            <div className="flex items-center gap-3">
+              <FaWind className="text-purple-400 text-2xl" />
+              Fully Air Conditioned
+            </div>
+            <div className="flex items-center gap-3">
+              <FaDumbbell className="text-purple-400 text-2xl" />
+              Strength Training
+            </div>
+            <div className="flex items-center gap-3">
+              <FaCrown className="text-purple-400 text-2xl" />
+              Premium Equipment
+            </div>
+          </div>
+        </motion.div>
+
         {/* CTA Button */}
         <motion.div
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1, duration: 0.6 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
           className="text-center mt-16"
         >
           <a
             href="/plans"
-            className="bg-purple-500 text-black px-10 py-4 rounded-2xl font-bold italic 
+            className="bg-purple-500 text-black px-10 py-4 rounded-2xl font-bold bungee 
                        shadow-lg drop-shadow-[0_0_15px_rgba(168,85,247,0.9)]
                        hover:scale-105 hover:bg-purple-400 
                        transition-transform duration-300"
