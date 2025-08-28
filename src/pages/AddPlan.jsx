@@ -11,6 +11,7 @@ export default function AddPlan() {
     name: "",
     price: "",
     duration: "",
+    discount: "", // ✅ new field
   });
 
   const [featuresText, setFeaturesText] = useState("");
@@ -30,8 +31,9 @@ export default function AddPlan() {
 
     const newPlan = {
       name: plan.name,
-      price: plan.price,
+      price: Number(plan.price),
       duration: plan.duration,
+      discount: plan.discount ? Number(plan.discount) : null, // ✅ add discount (nullable)
       features: featuresText
         .split(",")
         .map((f) => f.trim())
@@ -55,32 +57,58 @@ export default function AddPlan() {
           value={plan.name}
           onChange={handleChange}
           placeholder="Plan Name"
-          className="p-2 rounded bg-gray-800"
+          className="p-2 rounded bg-gray-800 w-full"
         />
-        <div className="relative">
-  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
-  <input
-    name="price"
-    value={plan.price}
-    onChange={handleChange}
-    placeholder="Price"
-    className="pl-6 p-2 rounded bg-gray-800 w-full"
-  />
-</div>
 
+        {/* Price field with ₹ */}
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            ₹
+          </span>
+          <input
+            name="price"
+            type="number"
+            value={plan.price}
+            onChange={handleChange}
+            placeholder="Price"
+            className="pl-6 p-2 rounded bg-gray-800 w-full"
+          />
+        </div>
+
+        {/* Duration */}
         <input
           name="duration"
           value={plan.duration}
           onChange={handleChange}
           placeholder="Duration"
-          className="p-2 rounded bg-gray-800"
+          className="p-2 rounded bg-gray-800 w-full"
         />
+
+        {/* ✅ Discount */}
+        <div className="relative">
+          <input
+            name="discount"
+            type="number"
+            value={plan.discount}
+            onChange={handleChange}
+            placeholder="Discount (%) - optional"
+            className="p-2 rounded bg-gray-800 w-full"
+          />
+          {plan.discount && (
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              %
+            </span>
+          )}
+        </div>
+
+        {/* Features */}
         <textarea
           value={featuresText}
           onChange={(e) => setFeaturesText(e.target.value)}
           placeholder="Features (comma-separated)"
-          className="p-2 rounded bg-gray-800"
+          className="p-2 rounded bg-gray-800 w-full"
         />
+
         <button
           type="submit"
           className="bg-green-600 hover:bg-green-700 p-2 rounded"

@@ -13,7 +13,7 @@ import Testimonials from "./pages/Testimonials";
 import AdminLogin from "./pages/AdminLogin";
 import Register from "./pages/Register";
 import RegisterForm from "./pages/RegisterForm";
-
+import SplashScreen from "./components/SplashScreen";
 // Admin Layout and Pages
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -40,7 +40,7 @@ export default function App() {
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<SplashScreen />} />
         <Route path="/plans" element={<Plans />} />
         <Route path="/trainers" element={<Trainers />} />
         <Route path="/contact" element={<Contact />} />

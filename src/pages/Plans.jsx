@@ -15,8 +15,8 @@ export default function Plans() {
         return {
           id: doc.id,
           ...data,
-          // Ensure price is numeric
           price: Number(data.price) || 0,
+          discount: Number(data.discount) || 0, // extra field
         };
       });
       setPlans(livePlans);
@@ -37,60 +37,76 @@ export default function Plans() {
       </motion.h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-6xl mx-auto">
-        {plans.map((plan, index) => (
-          <motion.div
-            key={plan.id || index}
-            whileHover={{
-              scale: 1.06,
-              boxShadow: "0 0 35px rgba(168,85,247,0.9)",
-            }}
-            transition={{ type: "spring", stiffness: 280 }}
-            className="bg-[#111] border border-purple-500 rounded-2xl shadow-xl p-8 text-center relative overflow-hidden flex flex-col"
-          >
+        {plans.map((plan, index) => {
+          const hasDiscount = plan.discount > 0;
+          const discountedPrice = hasDiscount
+            ? Math.round(plan.price - (plan.price * plan.discount) / 100)
+            : plan.price;
+
+          return (
             <motion.div
-              className="absolute inset-0 rounded-2xl border-2 border-purple-400 opacity-20 pointer-events-none"
-              animate={{ opacity: [0.2, 0.6, 0.2] }}
-              transition={{ repeat: Infinity, duration: 3 }}
-            />
-
-            <h3 className="text-2xl md:text-3xl font-extrabold  text-purple-400 mb-4 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
-              {plan.name}
-            </h3>
-
-            {/* Display price with ₹ but store numeric price */}
-            <p className="text-3xl font-extrabold text-white mb-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]">
-              ₹{plan.price}
-            </p>
-
-            <ul className="space-y-3 mb-10 text-gray-300 flex-grow text-left font-bungee">
-              {plan.features?.map((feature, i) => (
-                <li
-                  key={i}
-                  className="relative pl-5 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-2 before:h-2 before:rounded-full before:bg-purple-400"
-                >
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              to="/register/form"
-              state={{ plan }}
-              className="mt-auto"
+              key={plan.id || index}
+              whileHover={{
+                scale: 1.06,
+                boxShadow: "0 0 35px rgba(168,85,247,0.9)",
+              }}
+              transition={{ type: "spring", stiffness: 280 }}
+              className="bg-[#111] border border-purple-500 rounded-2xl shadow-xl p-8 text-center relative overflow-hidden flex flex-col"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-purple-500 text-black px-8 py-3 rounded-xl font-bold bungee
-                           shadow-lg drop-shadow-[0_0_15px_rgba(168,85,247,0.9)]
-                           hover:scale-105 hover:bg-purple-400 
-                           transition-transform duration-300 w-full"
-              >
-                Join Now 🚀
-              </motion.button>
-            </Link>
-          </motion.div>
-        ))}
+              <motion.div
+                className="absolute inset-0 rounded-2xl border-2 border-purple-400 opacity-20 pointer-events-none"
+                animate={{ opacity: [0.2, 0.6, 0.2] }}
+                transition={{ repeat: Infinity, duration: 3 }}
+              />
+
+              <h3 className="text-2xl md:text-3xl font-extrabold  text-purple-400 mb-4 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">
+                {plan.name}
+              </h3>
+
+              {hasDiscount ? (
+                <div className="mb-6">
+                  <p className="text-xl line-through text-gray-500">
+                    ₹{plan.price}
+                  </p>
+                  <p className="text-3xl font-extrabold text-yellow-300 drop-shadow-[0_0_12px_rgba(253,224,71,0.9)]">
+                    ₹{discountedPrice}
+                  </p>
+                  <p className="text-sm text-green-400 font-semibold">
+                    🎉 {plan.discount}% OFF
+                  </p>
+                </div>
+              ) : (
+                <p className="text-3xl font-extrabold text-white mb-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]">
+                  ₹{plan.price}
+                </p>
+              )}
+
+              <ul className="space-y-3 mb-10 text-gray-300 flex-grow text-left font-bungee">
+                {plan.features?.map((feature, i) => (
+                  <li
+                    key={i}
+                    className="relative pl-5 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-2 before:h-2 before:rounded-full before:bg-purple-400"
+                  >
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <Link to="/register/form" state={{ plan }} className="mt-auto">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-purple-500 text-black px-8 py-3 rounded-xl font-bold bungee
+                             shadow-lg drop-shadow-[0_0_15px_rgba(168,85,247,0.9)]
+                             hover:scale-105 hover:bg-purple-400 
+                             transition-transform duration-300 w-full"
+                >
+                  Join Now 🚀
+                </motion.button>
+              </Link>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );

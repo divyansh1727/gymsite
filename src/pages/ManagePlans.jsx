@@ -22,7 +22,7 @@ export default function ManagePlans() {
 
   const handleDelete = async (id) => {
     await deleteDoc(doc(db, "plans", id));
-    // No need to manually update state — snapshot does it
+    // Snapshot listener auto-updates state
   };
 
   return (
@@ -47,6 +47,13 @@ export default function ManagePlans() {
               <div>
                 <p><strong>Name:</strong> {plan.name}</p>
                 <p><strong>Price:</strong> ₹{plan.price}</p>
+                
+                {/* 🔹 Show discount if available */}
+                <p>
+                  <strong>Discount:</strong>{" "}
+                  {plan.discount ? `${plan.discount}% OFF` : "0%"}
+                </p>
+
                 <p><strong>Duration:</strong> {plan.duration}</p>
                 <p><strong>Features:</strong></p>
                 <ul className="list-disc list-inside">

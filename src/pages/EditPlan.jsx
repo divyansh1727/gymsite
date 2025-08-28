@@ -10,8 +10,9 @@ export default function EditPlan() {
 
   const [plan, setPlan] = useState({
     name: "",
-    price: "", // still string in input
+    price: "",
     duration: "",
+    discount: "", // new field
     features: [],
   });
 
@@ -25,8 +26,9 @@ export default function EditPlan() {
         const data = docSnap.data();
         setPlan({
           name: data.name || "",
-          price: data.price?.toString() || "", // ensure input shows string
+          price: data.price?.toString() || "",
           duration: data.duration || "",
+          discount: data.discount?.toString() || "",
           features: data.features || [],
         });
         setFeaturesText((data.features || []).join(", "));
@@ -47,16 +49,22 @@ export default function EditPlan() {
       return;
     }
 
-    // Convert price to number safely
     const numericPrice = Number(plan.price.replace(/[^0-9.]/g, ""));
     if (isNaN(numericPrice)) {
       alert("Price must be a valid number.");
       return;
     }
 
+    const numericDiscount = Number(plan.discount);
+    if (plan.discount && (isNaN(numericDiscount) || numericDiscount < 0 || numericDiscount > 100)) {
+      alert("Discount must be between 0 and 100.");
+      return;
+    }
+
     const updatedPlan = {
       ...plan,
-      price: numericPrice, // store numeric value in Firestore
+      price: numericPrice,
+      discount: numericDiscount || 0,
       features: featuresText
         .split(",")
         .map((f) => f.trim())
@@ -82,6 +90,7 @@ export default function EditPlan() {
           placeholder="Plan Name"
           className="p-2 rounded bg-gray-800"
         />
+
         <div className="relative">
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
           <input
@@ -92,6 +101,7 @@ export default function EditPlan() {
             className="pl-6 p-2 rounded bg-gray-800 w-full"
           />
         </div>
+
         <input
           name="duration"
           value={plan.duration}
@@ -99,6 +109,16 @@ export default function EditPlan() {
           placeholder="Duration"
           className="p-2 rounded bg-gray-800"
         />
+
+        {/* Discount Field */}
+        <input
+          name="discount"
+          value={plan.discount}
+          onChange={handleChange}
+          placeholder="Discount (%)"
+          className="p-2 rounded bg-gray-800"
+        />
+
         <textarea
           name="featuresText"
           value={featuresText}
@@ -106,6 +126,7 @@ export default function EditPlan() {
           placeholder="Features (comma-separated)"
           className="p-2 rounded bg-gray-800"
         />
+
         <button
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 p-2 rounded"
@@ -116,3 +137,4 @@ export default function EditPlan() {
     </div>
   );
 }
+
