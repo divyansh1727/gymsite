@@ -3,8 +3,8 @@ import { db, storage } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import trainer1 from "../assets/trainers/trainer1.jpg";
-import trainer2 from "../assets/trainers/trainer2.mp4";
+
+import trainer2 from "../assets/trainers/trainer2.jpg";
 
 export default function UploadStaticTrainers() {
   const [loading, setLoading] = useState(false);

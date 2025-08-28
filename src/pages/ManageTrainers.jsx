@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 // Static trainer images
 import trainer1 from "../assets/trainers/trainer1.jpg";
-import trainer2 from "../assets/trainers/trainer2.mp4";
+import trainer2 from "../assets/trainers/trainer2.jpg";
 
 export default function ManageTrainers() {
   const [trainers, setTrainers] = useState([]);

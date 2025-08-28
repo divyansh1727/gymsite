@@ -1,7 +1,6 @@
 // src/pages/Trainers.jsx
 import { motion } from "framer-motion";
-import trainer1 from "../assets/trainers/trainer1.jpg";
-import trainer2 from "../assets/trainers/trainer2.mp4";
+import trainer2 from "../assets/trainers/trainer2.jpg";
 
 export default function Trainers() {
   return (
@@ -44,26 +43,7 @@ export default function Trainers() {
 
       {/* Trainers Grid */}
       <div className="grid gap-12 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto place-items-center">
-        {/* Trainer 1 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(168,85,247,0.8)" }}
-          className="bg-[#111] border border-purple-500 rounded-2xl p-6 shadow-xl w-full max-w-sm text-center"
-        >
-          <img
-            src={trainer1}
-            alt="Divyansh Singh"
-            className="w-40 h-40 mx-auto rounded-full object-cover border-4 border-purple-400 mb-6"
-          />
-          <h2 className="text-2xl font-extrabold text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">
-            Divyansh Singh
-          </h2>
-          <p className="text-gray-300 font mt-2">Certified Fitness Coach</p>
-        </motion.div>
-
-        {/* Trainer 2 (Video) */}
+        {/* Trainer 2 (Now Image) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -71,19 +51,32 @@ export default function Trainers() {
           whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(168,85,247,0.8)" }}
           className="bg-[#111] border border-purple-500 rounded-2xl p-6 shadow-xl w-full max-w-sm text-center"
         >
-          <video
+          <img
             src={trainer2}
-            autoPlay
-            loop
-            muted
+            alt="Ritik Raikwar"
             className="w-40 h-40 mx-auto rounded-full object-cover border-4 border-purple-400 mb-6"
           />
-          <h2 className="text-2xl font-extrabold text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">
-            Ritik Raikwar
-          </h2>
-          <p className="text-gray-300 font-bungee mt-2">
-            Strength & Conditioning
-          </p>
+          <motion.h2
+  initial={{ scale: 0.8, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  transition={{ duration: 0.6, type: "spring" }}
+  className="text-3xl font-extrabold text-purple-400 
+             drop-shadow-[0_0_20px_rgba(168,85,247,0.9)]"
+>
+  Ritik Raikwar
+</motion.h2>
+
+<motion.p
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.3, duration: 0.6 }}
+  className="mt-2 text-lg uppercase font-semibold tracking-wider 
+             text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,0.8)]"
+>
+  Owner
+</motion.p>
+
+
         </motion.div>
       </div>
     </section>
