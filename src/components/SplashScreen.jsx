@@ -2,7 +2,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
  // your main site content
 import Logo from "../assets/logo/logo.png"; // or wherever your logo is
-import Home from "../pages/Home";
+
+import App from "../App";
 
 export default function SplashScreen() {
   const [showContent, setShowContent] = useState(false);
@@ -27,12 +28,12 @@ export default function SplashScreen() {
             exit={{ scale: 0.5, opacity: 0, y: 100 }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-            <img src={Logo} alt="Gym Logo" className="w-60 h-60" />
+            <img src={Logo} alt="Gym Logo" className="w-32 h-32 sm:w-40 sm:h-40 md:w-60 md:h-60" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {showContent && <Home />} {/* Your main Gym site */}
+      {showContent && <App />} {/* Your main Gym site */}
     </div>
   );
 }

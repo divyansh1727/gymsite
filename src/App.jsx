@@ -40,7 +40,7 @@ export default function App() {
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<SplashScreen />} />
+        <Route path="/" element={<Home />} />
         <Route path="/plans" element={<Plans />} />
         <Route path="/trainers" element={<Trainers />} />
         <Route path="/contact" element={<Contact />} />
