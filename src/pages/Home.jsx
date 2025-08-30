@@ -11,6 +11,7 @@ import About from "../pages/About";
 import RegisterButton from "../components/RegisterButton";
 import Plans from "../pages/Plans";
 import Contact from "../pages/Contact";
+import Transformation from "./Transformation";
 import Logo from "../assets/logo/logo.png"; // your logo path
 
 export default function Home() {
@@ -61,6 +62,7 @@ export default function Home() {
               Admin Login
             </Link>
           </div>
+          <Transformation/>
 
           <Testimonials />
           <Contact/>
