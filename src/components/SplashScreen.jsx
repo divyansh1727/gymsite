@@ -25,8 +25,8 @@ export default function SplashScreen() {
               y: [-100, 0, 0],
               opacity: [0, 1, 1],
             }}
-            exit={{ scale: 0.5, opacity: 0, y: 100 }}
-            transition={{ duration: 0.7, ease: "easeInOut" }}
+            exit={{ scale: 0.3, opacity: 0, y: 100 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
           >
             <img src={Logo} alt="Gym Logo" className="w-32 h-32 sm:w-40 sm:h-40 md:w-60 md:h-60" />
           </motion.div>

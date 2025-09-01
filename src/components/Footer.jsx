@@ -1,8 +1,8 @@
 import {
   FaInstagram,
   FaFacebookF,
-  FaTwitter,
   FaYoutube,
+  FaWhatsapp
 } from "react-icons/fa";
 
 export default function Footer() {
@@ -45,18 +45,38 @@ export default function Footer() {
             Follow Us
           </h3>
           <div className="flex gap-5 text-2xl">
-            <a href="#" className="hover:text-pink-500 transition">
-              <FaInstagram />
-            </a>
-            <a href="#" className="hover:text-blue-500 transition">
-              <FaFacebookF />
-            </a>
-            <a href="#" className="hover:text-sky-400 transition">
-              <FaTwitter />
-            </a>
-            <a href="#" className="hover:text-red-600 transition">
-              <FaYoutube />
-            </a>
+            <a
+  href="https://instagram.com/fitness_beast_gym"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="hover:text-pink-500 transition"
+>
+  <FaInstagram />
+</a>
+
+<a
+  href="#"
+  className="hover:text-blue-500 transition"
+>
+  <FaFacebookF />
+</a>
+
+<a
+  href="https://wa.me/7224030844"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="hover:text-green-500 transition"
+>
+  <FaWhatsapp />
+</a>
+
+<a
+  href="#"
+  className="hover:text-red-600 transition"
+>
+  <FaYoutube />
+</a>
+
           </div>
         </div>
       </div>
