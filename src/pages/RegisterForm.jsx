@@ -56,64 +56,73 @@ export default function RegisterForm() {
 
   // ✅ handle PDF generation + Firestore save
   const handlePaymentDone = async () => {
-    try {
-      const pdfBlob = await generatePDF(formData, plan);
+  try {
+    const pdfBlob = await generatePDF(formData, plan);
 
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
-        .getHours()
-        .toString()
-        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+      .getHours()
+      .toString()
+      .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
-      // Download PDF locally
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${timestamp}_${formData.name}_${plan.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      // Upload PDF to Firebase Storage
-      const pdfRef = ref(
-        storage,
-        `registrations/${formData.name}_${timestamp}.pdf`
-      );
-      await uploadBytes(pdfRef, pdfBlob);
-      const pdfURL = await getDownloadURL(pdfRef);
-
-      // Upload user document
-      let documentURL = null;
-      if (formData.document) {
-        const docRef = ref(
-          storage,
-          `documents/${formData.document.name}_${timestamp}`
-        );
-        await uploadBytes(docRef, formData.document);
-        documentURL = await getDownloadURL(docRef);
-      }
-
-      // Save metadata to Firestore
-      await addDoc(collection(db, "registrations"), {
-        ...formData,
-        planName: plan.name,
-        planPrice: plan.price,
-        paymentMethod, // ✅ Save payment type
-        pdfURL,
-        documentURL,
-        timestamp: serverTimestamp(),
-      });
-
-      alert("Registration complete! Admin will receive the PDF automatically.");
-      navigate("/success");
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong during registration.");
+    // ✅ Upload photo file (if any) to Storage
+    let photoURL = null;
+    if (formData.photoFile) {
+      const photoRef = ref(storage, `registrations/${formData.name}_${timestamp}_photo`);
+      await uploadBytes(photoRef, formData.photoFile);
+      photoURL = await getDownloadURL(photoRef);
     }
-  };
+
+    // ✅ Upload document file (if any) to Storage
+    let documentURL = null;
+    if (formData.documentFile) {
+      const docRef = ref(storage, `registrations/${formData.name}_${timestamp}_document`);
+      await uploadBytes(docRef, formData.documentFile);
+      documentURL = await getDownloadURL(docRef);
+    }
+
+    // ✅ Upload final PDF to Storage
+    const pdfRef = ref(storage, `registrations/${formData.name}_${timestamp}.pdf`);
+    await uploadBytes(pdfRef, pdfBlob);
+    const pdfURL = await getDownloadURL(pdfRef);
+
+    // ✅ Save only clean values + URLs to Firestore
+    await addDoc(collection(db, "registrations"), {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      gender: formData.gender,
+      bloodGroup: formData.bloodGroup,
+      previousHealthProblems: formData.previousHealthProblems,
+      address: formData.address,
+      alternateNumber: formData.alternateNumber,
+      planName: plan.name,
+      planPrice: plan.price,
+      paymentMethod,
+      photoURL,
+      documentURL,
+      pdfURL,
+      timestamp: serverTimestamp(),
+    });
+
+    // ✅ Send email with final PDF
+    const formDataToSend = new FormData();
+    formDataToSend.append("pdf", pdfBlob, `${formData.name}_${plan.name}.pdf`);
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("plan", plan.name);
+
+   
+
+    alert("Registration complete! Admin will receive the PDF automatically.");
+    navigate("/success");
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong during registration.");
+  }
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -212,22 +221,47 @@ export default function RegisterForm() {
         />
 
         <input
-          type="file"
-          name="photo"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setFormData((prev) => ({ ...prev, photo: reader.result }));
-              };
-              reader.readAsDataURL(file);
-            }
-          }}
-        />
-        <input type="file" name="document" onChange={handleChange} />
+  type="file"
+  name="photo"
+  accept="image/*"
+  capture="environment"
+  onChange={(e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          photo: reader.result,   // base64 string for PDF
+          photoFile: file,        // keep original file if needed later
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  }}
+/>
+
+<input
+  type="file"
+  name="document"
+  accept="image/*,.pdf"
+  onChange={(e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          document: reader.result,   // base64 for PDF if image
+          documentFile: file,        // keep original file for backend/email
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  }}
+/>
+
+        
 
         <button
           type="submit"

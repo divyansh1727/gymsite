@@ -1,62 +1,79 @@
-const functions = require("firebase-functions");
+// Import required packages
+const { onDocumentCreated } = require("firebase-functions/v2/firestore"); // ✅ v2 Firestore trigger
+const { defineSecret } = require("firebase-functions/params"); // ✅ Secrets
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const PDFDocument = require("pdfkit");
 
 admin.initializeApp();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // your Gmail app password
-  },
-});
+// ✅ Define Gmail credentials as secrets (must be added in Firebase console/CLI)
+const gmailUser = defineSecret("GMAIL_USER");
+const gmailPass = defineSecret("GMAIL_PASS");
 
-exports.sendRegistrationPDF = functions.firestore
-  .document("users/{userId}") // adjust collection name if different
-  .onCreate(async (snap, context) => {
-    const data = snap.data();
+// ✅ Firestore Trigger (on new document in 'registrations')
+exports.sendRegistrationPDF = onDocumentCreated(
+  {
+    document: "registrations/{regId}",
+    secrets: [gmailUser, gmailPass], // required for Gmail auth
+    region: "us-central1", // ✅ ensure region is set
+  },
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) {
+      console.error("❌ No data found in event");
+      return null;
+    }
+
+    const data = snapshot.data();
 
     try {
-      // Create PDF
-      const doc = new PDFDocument();
-      let buffers = [];
-      doc.on("data", buffers.push.bind(buffers));
-      doc.on("end", async () => {
-        const pdfData = Buffer.concat(buffers);
+      // ✅ Generate PDF as a buffer
+      const pdfBuffer = await new Promise((resolve, reject) => {
+        const doc = new PDFDocument();
+        const buffers = [];
 
-        // Mail options
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: "admin@gmail.com", // change to your admin email
-          subject: "New Registration PDF",
-          text: "A new registration has been submitted. See attached PDF.",
-          attachments: [
-            {
-              filename: "registration.pdf",
-              content: pdfData,
-            },
-          ],
-        };
+        doc.on("data", (chunk) => buffers.push(chunk));
+        doc.on("end", () => resolve(Buffer.concat(buffers)));
+        doc.on("error", reject);
 
-        // Send email
-        await transporter.sendMail(mailOptions);
-        console.log("Email sent with PDF!");
+        // PDF Content
+        doc.fontSize(18).text("Registration Details", { underline: true });
+        doc.moveDown();
+
+        doc.fontSize(12).text(`Name: ${data.name || ""}`);
+        doc.text(`Email: ${data.email || ""}`);
+        doc.text(`Phone: ${data.phone || ""}`);
+        doc.text(`Plan: ${data.planName || ""} - ${data.planPrice || ""}`);
+        doc.text(`Payment Method: ${data.paymentMethod || "Not Provided"}`);
+
+        doc.end();
       });
 
-      // PDF Content
-      doc.fontSize(18).text("Registration Details", { underline: true });
-      doc.moveDown();
+      // ✅ Setup transporter with Gmail secrets
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: gmailUser.value(),
+          pass: gmailPass.value(),
+        },
+      });
 
-      doc.fontSize(12).text(`Name: ${data.name || ""}`);
-      doc.text(`Email: ${data.email || ""}`);
-      doc.text(`Phone: ${data.phone || ""}`);
-      doc.text(`Payment Method: ${data.paymentMethod || "Not Provided"}`); // ✅ added
-      // Add any other fields you need
+      // ✅ Mail options
+      const mailOptions = {
+        from: gmailUser.value(),
+        to: "ritikfitness14@gmail.com", // ⚡ change to your admin email
+        subject: "New Registration PDF",
+        text: `A new registration has been submitted by ${data.name || "Unknown User"}. See attached PDF.`,
+        attachments: [{ filename: "registration.pdf", content: pdfBuffer }],
+      };
 
-      doc.end();
+      await transporter.sendMail(mailOptions);
+      console.log("📩 Email sent with PDF!");
+      return null;
     } catch (error) {
-      console.error("Error sending registration PDF:", error);
+      console.error("❌ Error sending registration PDF:", error);
+      return null;
     }
-  });
+  }
+);

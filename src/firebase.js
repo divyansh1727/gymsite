@@ -9,7 +9,8 @@ const firebaseConfig = {
   apiKey: "AIzaSyAdnSPzXWCPThzw9sfsOmLFhiijjKttmHg",
   authDomain: "gymsite-8ad25.firebaseapp.com",
   projectId: "gymsite-8ad25",
-  storageBucket: "gymsite-8ad25.appspot.com", // ✅ FIXED
+  storageBucket: "gymsite-8ad25.firebasestorage.app",
+ // ✅ FIXED
   messagingSenderId: "748648856399",
   appId: "1:748648856399:web:d382a9fe471aae8318633a"
 };
