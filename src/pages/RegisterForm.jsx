@@ -22,7 +22,9 @@ export default function RegisterForm() {
     address: "",
     alternateNumber: "",
     photo: null,
+    photoFile:null,
     document: null,
+    documentFile:null,
   });
 
   const [showConfirmButton, setShowConfirmButton] = useState(false);
@@ -53,11 +55,37 @@ export default function RegisterForm() {
       return { ...prev, previousHealthProblems: Array.from(current) };
     });
   };
+  function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
   // ✅ handle PDF generation + Firestore save
+  
   const handlePaymentDone = async () => {
   try {
-    const pdfBlob = await generatePDF(formData, plan);
+    let photoBase64 = formData.photo;
+    let documentBase64 = formData.document;
+
+    if (formData.photoFile && !photoBase64) {
+      photoBase64 = await fileToBase64(formData.photoFile);
+    }
+    if (formData.documentFile && !documentBase64) {
+      documentBase64 = await fileToBase64(formData.documentFile);
+    }
+    // ✅ Pass only safe fields (no File objects) to PDF generator
+    const pdfBlob = await generatePDF(
+      {
+        ...formData,
+        photo: photoBase64 || null,
+        document: documentBase64 || null,
+      },
+      plan
+    );
 
     const now = new Date();
     const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
@@ -88,7 +116,7 @@ export default function RegisterForm() {
     await uploadBytes(pdfRef, pdfBlob);
     const pdfURL = await getDownloadURL(pdfRef);
 
-    // ✅ Save only clean values + URLs to Firestore
+    // ✅ Save clean values only (no File objects) to Firestore
     await addDoc(collection(db, "registrations"), {
       name: formData.name,
       email: formData.email,
@@ -101,19 +129,17 @@ export default function RegisterForm() {
       planName: plan.name,
       planPrice: plan.price,
       paymentMethod,
-      photoURL,
-      documentURL,
-      pdfURL,
+      photoURL,     // ✅ only string
+      documentURL,  // ✅ only string
+      pdfURL,       // ✅ only string
       timestamp: serverTimestamp(),
     });
 
-    // ✅ Send email with final PDF
+    // ✅ Optionally send PDF via email later
     const formDataToSend = new FormData();
     formDataToSend.append("pdf", pdfBlob, `${formData.name}_${plan.name}.pdf`);
     formDataToSend.append("name", formData.name);
     formDataToSend.append("plan", plan.name);
-
-   
 
     alert("Registration complete! Admin will receive the PDF automatically.");
     navigate("/success");
@@ -122,6 +148,8 @@ export default function RegisterForm() {
     alert("Something went wrong during registration.");
   }
 };
+
+
 
 
   const handleSubmit = (e) => {

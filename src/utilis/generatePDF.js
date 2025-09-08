@@ -1,11 +1,22 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
+// ✅ Helper: Convert base64 → Uint8Array
+function base64ToUint8Array(base64) {
+  const base64Data = base64.split(",")[1]; // remove prefix
+  const binary = atob(base64Data);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 export default async function generatePDF(formData, plan) {
   // Create a new PDF
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4 size
+  const page = pdfDoc.addPage([595, 842]); // A4
   const { height } = page.getSize();
-
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   // Title
@@ -43,44 +54,77 @@ export default async function generatePDF(formData, plan) {
     });
   });
 
-  // ✅ Add photo (if base64 image)
+  // ✅ Add photo safely
   if (formData.photo) {
-    const imgBytes = await fetch(formData.photo).then((res) => res.arrayBuffer());
-    let img;
-    if (formData.photo.startsWith("data:image/png")) {
-      img = await pdfDoc.embedPng(imgBytes);
-    } else {
-      img = await pdfDoc.embedJpg(imgBytes);
-    }
-    const imgPage = pdfDoc.addPage([595, 842]);
-    imgPage.drawText("User Photo", { x: 50, y: 800, size: 16, font });
-    imgPage.drawImage(img, { x: 50, y: 500, width: 200, height: 200 });
-  }
+    try {
+      const imgBytes = base64ToUint8Array(formData.photo);
+      let img = null;
 
-  // ✅ Add document (image OR full PDF)
-  if (formData.document) {
-    if (formData.document.startsWith("data:image/")) {
-      // Image case
-      const imgBytes = await fetch(formData.document).then((res) => res.arrayBuffer());
-      let img;
-      if (formData.document.startsWith("data:image/png")) {
+      if (formData.photo.startsWith("data:image/png")) {
         img = await pdfDoc.embedPng(imgBytes);
-      } else {
+      } else if (
+        formData.photo.startsWith("data:image/jpeg") ||
+        formData.photo.startsWith("data:image/jpg")
+      ) {
         img = await pdfDoc.embedJpg(imgBytes);
       }
-      const imgPage = pdfDoc.addPage([595, 842]);
-      imgPage.drawText("Attached Document", { x: 50, y: 800, size: 16, font });
-      imgPage.drawImage(img, { x: 50, y: 200, width: 400, height: 500 });
-    } else if (formData.document.startsWith("data:application/pdf")) {
-      // PDF case → append ALL pages
-      const pdfBytes = await fetch(formData.document).then((res) => res.arrayBuffer());
-      const donorPdf = await PDFDocument.load(pdfBytes);
-      const copiedPages = await pdfDoc.copyPages(donorPdf, donorPdf.getPageIndices());
-      copiedPages.forEach((p) => pdfDoc.addPage(p));
+
+      if (img) {
+        const imgPage = pdfDoc.addPage([595, 842]);
+        imgPage.drawText("User Photo", { x: 50, y: 800, size: 16, font });
+        imgPage.drawImage(img, { x: 50, y: 500, width: 200, height: 200 });
+      } else {
+        const imgPage = pdfDoc.addPage([595, 842]);
+        imgPage.drawText("Unsupported photo format", { x: 50, y: 800, size: 16, font });
+      }
+    } catch (err) {
+      console.error("Error embedding photo:", err);
+      const errorPage = pdfDoc.addPage([595, 842]);
+      errorPage.drawText("Could not embed photo.", { x: 50, y: 800, size: 16, font });
     }
   }
 
-  // Return as Blob
+  // ✅ Add document safely (image OR full PDF)
+  if (formData.document) {
+    try {
+      if (formData.document.startsWith("data:image/")) {
+        const imgBytes = base64ToUint8Array(formData.document);
+        let img = null;
+
+        if (formData.document.startsWith("data:image/png")) {
+          img = await pdfDoc.embedPng(imgBytes);
+        } else if (
+          formData.document.startsWith("data:image/jpeg") ||
+          formData.document.startsWith("data:image/jpg")
+        ) {
+          img = await pdfDoc.embedJpg(imgBytes);
+        }
+
+        if (img) {
+          const imgPage = pdfDoc.addPage([595, 842]);
+          imgPage.drawText("Attached Document", { x: 50, y: 800, size: 16, font });
+          imgPage.drawImage(img, { x: 50, y: 200, width: 400, height: 500 });
+        } else {
+          const imgPage = pdfDoc.addPage([595, 842]);
+          imgPage.drawText("Unsupported document image format", { x: 50, y: 800, size: 16, font });
+        }
+      } else if (formData.document.startsWith("data:application/pdf")) {
+        const pdfBytes = base64ToUint8Array(formData.document);
+        const donorPdf = await PDFDocument.load(pdfBytes);
+        const copiedPages = await pdfDoc.copyPages(donorPdf, donorPdf.getPageIndices());
+        copiedPages.forEach((p) => pdfDoc.addPage(p));
+      } else {
+        const imgPage = pdfDoc.addPage([595, 842]);
+        imgPage.drawText("Unsupported document type", { x: 50, y: 800, size: 16, font });
+      }
+    } catch (err) {
+      console.error("Error embedding document:", err);
+      const errorPage = pdfDoc.addPage([595, 842]);
+      errorPage.drawText("Could not embed document.", { x: 50, y: 800, size: 16, font });
+    }
+  }
+
+  // ✅ Return final PDF Blob
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: "application/pdf" });
 }
