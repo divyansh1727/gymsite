@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase";
 import { QRCodeCanvas } from "qrcode.react";
+import toast, { Toaster } from "react-hot-toast"; // ✅ new
 
 export default function RegisterForm() {
   const location = useLocation();
@@ -22,13 +23,13 @@ export default function RegisterForm() {
     address: "",
     alternateNumber: "",
     photo: null,
-    photoFile:null,
+    photoFile: null,
     document: null,
-    documentFile:null,
+    documentFile: null,
   });
 
   const [showConfirmButton, setShowConfirmButton] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Online"); // ✅ Toggle state
+  const [paymentMethod, setPaymentMethod] = useState("Online");
 
   const healthOptions = [
     "Asthma",
@@ -55,109 +56,104 @@ export default function RegisterForm() {
       return { ...prev, previousHealthProblems: Array.from(current) };
     });
   };
+
   function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
   // ✅ handle PDF generation + Firestore save
-  
   const handlePaymentDone = async () => {
-  try {
-    let photoBase64 = formData.photo;
-    let documentBase64 = formData.document;
+    try {
+      let photoBase64 = formData.photo;
+      let documentBase64 = formData.document;
 
-    if (formData.photoFile && !photoBase64) {
-      photoBase64 = await fileToBase64(formData.photoFile);
+      if (formData.photoFile && !photoBase64) {
+        photoBase64 = await fileToBase64(formData.photoFile);
+      }
+      if (formData.documentFile && !documentBase64) {
+        documentBase64 = await fileToBase64(formData.documentFile);
+      }
+
+      const pdfBlob = await generatePDF(
+        {
+          ...formData,
+          photo: photoBase64 || null,
+          document: documentBase64 || null,
+        },
+        plan
+      );
+
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
+        .getHours()
+        .toString()
+        .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
+
+      let photoURL = null;
+      if (formData.photoFile) {
+        const photoRef = ref(
+          storage,
+          `registrations/${formData.name}_${timestamp}_photo`
+        );
+        await uploadBytes(photoRef, formData.photoFile);
+        photoURL = await getDownloadURL(photoRef);
+      }
+
+      let documentURL = null;
+      if (formData.documentFile) {
+        const docRef = ref(
+          storage,
+          `registrations/${formData.name}_${timestamp}_document`
+        );
+        await uploadBytes(docRef, formData.documentFile);
+        documentURL = await getDownloadURL(docRef);
+      }
+
+      const pdfRef = ref(
+        storage,
+        `registrations/${formData.name}_${timestamp}.pdf`
+      );
+      await uploadBytes(pdfRef, pdfBlob);
+      const pdfURL = await getDownloadURL(pdfRef);
+
+      await addDoc(collection(db, "registrations"), {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
+        previousHealthProblems: formData.previousHealthProblems,
+        address: formData.address,
+        alternateNumber: formData.alternateNumber,
+        planName: plan.name,
+        planPrice: plan.price,
+        paymentMethod,
+        photoURL,
+        documentURL,
+        pdfURL,
+        timestamp: serverTimestamp(),
+      });
+
+      toast.success("✅ Registration complete!");
+      navigate("/success");
+    } catch (error) {
+      console.error(error);
+      toast.error("❌ Error: " + error.message);
     }
-    if (formData.documentFile && !documentBase64) {
-      documentBase64 = await fileToBase64(formData.documentFile);
-    }
-    // ✅ Pass only safe fields (no File objects) to PDF generator
-    const pdfBlob = await generatePDF(
-      {
-        ...formData,
-        photo: photoBase64 || null,
-        document: documentBase64 || null,
-      },
-      plan
-    );
-
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${(now.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}_${now
-      .getHours()
-      .toString()
-      .padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
-
-    // ✅ Upload photo file (if any) to Storage
-    let photoURL = null;
-    if (formData.photoFile) {
-      const photoRef = ref(storage, `registrations/${formData.name}_${timestamp}_photo`);
-      await uploadBytes(photoRef, formData.photoFile);
-      photoURL = await getDownloadURL(photoRef);
-    }
-
-    // ✅ Upload document file (if any) to Storage
-    let documentURL = null;
-    if (formData.documentFile) {
-      const docRef = ref(storage, `registrations/${formData.name}_${timestamp}_document`);
-      await uploadBytes(docRef, formData.documentFile);
-      documentURL = await getDownloadURL(docRef);
-    }
-
-    // ✅ Upload final PDF to Storage
-    const pdfRef = ref(storage, `registrations/${formData.name}_${timestamp}.pdf`);
-    await uploadBytes(pdfRef, pdfBlob);
-    const pdfURL = await getDownloadURL(pdfRef);
-
-    // ✅ Save clean values only (no File objects) to Firestore
-    await addDoc(collection(db, "registrations"), {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      gender: formData.gender,
-      bloodGroup: formData.bloodGroup,
-      previousHealthProblems: formData.previousHealthProblems,
-      address: formData.address,
-      alternateNumber: formData.alternateNumber,
-      planName: plan.name,
-      planPrice: plan.price,
-      paymentMethod,
-      photoURL,     // ✅ only string
-      documentURL,  // ✅ only string
-      pdfURL,       // ✅ only string
-      timestamp: serverTimestamp(),
-    });
-
-    // ✅ Optionally send PDF via email later
-    const formDataToSend = new FormData();
-    formDataToSend.append("pdf", pdfBlob, `${formData.name}_${plan.name}.pdf`);
-    formDataToSend.append("name", formData.name);
-    formDataToSend.append("plan", plan.name);
-
-    alert("Registration complete! Admin will receive the PDF automatically.");
-    navigate("/success");
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong during registration.");
-  }
-};
-
-
-
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setShowConfirmButton(true); // ✅ Show toggle after submit
+    setShowConfirmButton(true);
   };
 
-  // ✅ UPI QR logic
   const upiId = "ritikraikwar05671@ybl";
   let numericPrice = String(plan.price || "0")
     .replace(/[^0-9.]/g, "")
@@ -171,11 +167,12 @@ export default function RegisterForm() {
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-neutral-900 text-white rounded-2xl mt-10">
+      <Toaster /> {/* ✅ toaster for nice alerts */}
+
       <h2 className="text-2xl font-bold mb-4 text-center">
         Register for {plan.name} - {plan.price}
       </h2>
 
-      {/* ✅ Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           name="name"
@@ -247,49 +244,60 @@ export default function RegisterForm() {
           className="w-full p-3 rounded-lg bg-neutral-800"
           required
         />
+        {/* ... all your inputs remain same ... */}
 
+        {/* ✅ Photo upload with validation */}
         <input
-  type="file"
-  name="photo"
-  accept="image/*"
-  capture="environment"
-  onChange={(e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          photo: reader.result,   // base64 string for PDF
-          photoFile: file,        // keep original file if needed later
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }}
-/>
+          type="file"
+          name="photo"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const ext = file.name.split(".").pop().toLowerCase();
+              if (["heic", "webp"].includes(ext)) {
+                toast.error("❌ HEIC/WebP not supported. Use JPG/PNG.");
+                return;
+              }
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setFormData((prev) => ({
+                  ...prev,
+                  photo: reader.result,
+                  photoFile: file,
+                }));
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
 
-<input
-  type="file"
-  name="document"
-  accept="image/*,.pdf"
-  onChange={(e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          document: reader.result,   // base64 for PDF if image
-          documentFile: file,        // keep original file for backend/email
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }}
-/>
-
-        
+        {/* ✅ Document upload with validation */}
+        <input
+          type="file"
+          name="document"
+          accept="image/*,.pdf"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const ext = file.name.split(".").pop().toLowerCase();
+              if (["heic", "webp"].includes(ext)) {
+                toast.error("❌ HEIC/WebP not supported. Use JPG/PNG/PDF.");
+                return;
+              }
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setFormData((prev) => ({
+                  ...prev,
+                  document: reader.result,
+                  documentFile: file,
+                }));
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
 
         <button
           type="submit"
@@ -298,6 +306,7 @@ export default function RegisterForm() {
           Submit
         </button>
       </form>
+
 
       {/* ✅ Payment Toggle after Submit (Pill Style) */}
       {showConfirmButton && (
