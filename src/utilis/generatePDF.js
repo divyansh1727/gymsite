@@ -1,10 +1,10 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
-// ✅ Helper: Convert base64 → Uint8Array
+// ✅ Convert base64 → Uint8Array
 function base64ToUint8Array(base64) {
   try {
     const base64Data = base64.split(",")[1]; // remove prefix
-    const cleaned = base64Data.replace(/\s/g, ""); // ✅ strip whitespace/newlines
+    const cleaned = base64Data.replace(/\s/g, ""); // strip whitespace/newlines
     const binary = atob(cleaned);
     const len = binary.length;
     const bytes = new Uint8Array(len);
@@ -19,13 +19,12 @@ function base64ToUint8Array(base64) {
 }
 
 export default async function generatePDF(formData, plan) {
-  // Create a new PDF
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
   const { height } = page.getSize();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // Title
+  // ✅ Title
   page.drawText("Ritik Fitness Registration", {
     x: 50,
     y: height - 50,
@@ -34,7 +33,7 @@ export default async function generatePDF(formData, plan) {
     color: rgb(0, 0, 0),
   });
 
-  // Basic details
+  // ✅ User Details
   const lines = [
     `Name: ${formData.name || ""}`,
     `Email: ${formData.email || ""}`,
@@ -60,46 +59,45 @@ export default async function generatePDF(formData, plan) {
     });
   });
 
-  // ✅ Add photo safely
-  if (formData.photo) {
+  // ✅ Add Photo
+  if (formData.photo && formData.photo.includes("data:image/")) {
     try {
+      console.log("Processing photo...");
       const imgBytes = base64ToUint8Array(formData.photo);
       if (!imgBytes) throw new Error("Invalid photo data");
 
       let img = null;
-      if (formData.photo.startsWith("data:image/png")) {
+      if (formData.photo.includes("data:image/png")) {
+        console.log("Detected PNG format");
         img = await pdfDoc.embedPng(imgBytes);
       } else if (
-        formData.photo.startsWith("data:image/jpeg") ||
-        formData.photo.startsWith("data:image/jpg")
+        formData.photo.includes("data:image/jpeg") ||
+        formData.photo.includes("data:image/jpg")
       ) {
+        console.log("Detected JPEG format");
         img = await pdfDoc.embedJpg(imgBytes);
       }
+
+      if (!img) throw new Error("Unsupported image format");
+
+      console.log("Image dimensions:", img.width, img.height);
 
       const imgPage = pdfDoc.addPage([595, 842]);
       imgPage.drawText("User Photo", { x: 50, y: 800, size: 16, font });
 
-      if (img) {
-        // ✅ auto-fit photo to page
-        const pageWidth = 595 - 100;
-        const pageHeight = 842 - 250;
-        const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
-        const { width, height } = img.scale(scale);
+      const pageWidth = 595 - 100;
+      const pageHeight = 842 - 250;
+      const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
+      const { width, height } = img.scale(scale);
 
-        imgPage.drawImage(img, {
-          x: 50,
-          y: 200,
-          width,
-          height,
-        });
-      } else {
-        imgPage.drawText("⚠️ Unsupported photo format", {
-          x: 50,
-          y: 780,
-          size: 12,
-          font,
-        });
-      }
+      console.log("Scaled dimensions:", width, height);
+
+      imgPage.drawImage(img, {
+        x: 50,
+        y: 200,
+        width,
+        height,
+      });
     } catch (err) {
       console.error("Error embedding photo:", err);
       const errorPage = pdfDoc.addPage([595, 842]);
@@ -112,48 +110,44 @@ export default async function generatePDF(formData, plan) {
     }
   }
 
-  // ✅ Add document safely (image OR PDF)
+  // ✅ Add Document (image or PDF)
   if (formData.document) {
     try {
       if (formData.document.startsWith("data:image/")) {
+        console.log("Processing document as image...");
         const imgBytes = base64ToUint8Array(formData.document);
         if (!imgBytes) throw new Error("Invalid document image data");
 
         let img = null;
-        if (formData.document.startsWith("data:image/png")) {
+        if (formData.document.includes("data:image/png")) {
+          console.log("Document is PNG format");
           img = await pdfDoc.embedPng(imgBytes);
         } else if (
-          formData.document.startsWith("data:image/jpeg") ||
-          formData.document.startsWith("data:image/jpg")
+          formData.document.includes("data:image/jpeg") ||
+          formData.document.includes("data:image/jpg")
         ) {
+          console.log("Document is JPEG format");
           img = await pdfDoc.embedJpg(imgBytes);
         }
+
+        if (!img) throw new Error("Unsupported document image format");
 
         const imgPage = pdfDoc.addPage([595, 842]);
         imgPage.drawText("Attached Document", { x: 50, y: 800, size: 16, font });
 
-        if (img) {
-          // ✅ auto-fit document screenshot to page
-          const pageWidth = 595 - 100;
-          const pageHeight = 842 - 250;
-          const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
-          const { width, height } = img.scale(scale);
+        const pageWidth = 595 - 100;
+        const pageHeight = 842 - 250;
+        const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
+        const { width, height } = img.scale(scale);
 
-          imgPage.drawImage(img, {
-            x: 50,
-            y: 200,
-            width,
-            height,
-          });
-        } else {
-          imgPage.drawText("⚠️ Unsupported document image format", {
-            x: 50,
-            y: 780,
-            size: 12,
-            font,
-          });
-        }
+        imgPage.drawImage(img, {
+          x: 50,
+          y: 200,
+          width,
+          height,
+        });
       } else if (formData.document.startsWith("data:application/pdf")) {
+        console.log("Processing document as PDF...");
         const pdfBytes = base64ToUint8Array(formData.document);
         if (!pdfBytes) throw new Error("Invalid embedded PDF");
 
@@ -184,7 +178,7 @@ export default async function generatePDF(formData, plan) {
     }
   }
 
-  // ✅ Return final PDF Blob
+  // ✅ Save PDF
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: "application/pdf" });
 }
