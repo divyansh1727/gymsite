@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
-// ✅ Convert base64 → Uint8Array
+// ✅ Convert base64 → Uint8Array safely
 function base64ToUint8Array(base64) {
   try {
     const base64Data = base64.split(",")[1]; // remove prefix
@@ -43,11 +43,7 @@ export default async function generatePDF(formData, plan) {
     `Address: ${formData.address || ""}`,
     `Plan: ${plan?.name || ""} (${plan?.price || ""})`,
     `Payment Method: ${formData.paymentMethod || "N/A"}`,
-    `Health Problems: ${
-      formData.previousHealthProblems?.length
-        ? formData.previousHealthProblems.join(", ")
-        : "None"
-    }`,
+    `Health Problems: ${formData.previousHealthProblems?.length ? formData.previousHealthProblems.join(", ") : "None"}`,
   ];
 
   lines.forEach((text, i) => {
@@ -60,7 +56,7 @@ export default async function generatePDF(formData, plan) {
   });
 
   // ✅ Add Photo
-  if (formData.photo && formData.photo.includes("data:image/")) {
+  if (formData.photo && formData.photo.startsWith("data:image/")) {
     try {
       console.log("Processing photo...");
       const imgBytes = base64ToUint8Array(formData.photo);
@@ -140,6 +136,8 @@ export default async function generatePDF(formData, plan) {
         const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
         const { width, height } = img.scale(scale);
 
+        console.log("Document scaled dimensions:", width, height);
+
         imgPage.drawImage(img, {
           x: 50,
           y: 200,
@@ -157,7 +155,9 @@ export default async function generatePDF(formData, plan) {
           donorPdf.getPageIndices()
         );
         copiedPages.forEach((p) => pdfDoc.addPage(p));
+        console.log("PDF pages embedded successfully");
       } else {
+        console.error("Unsupported document format");
         const errorPage = pdfDoc.addPage([595, 842]);
         errorPage.drawText("⚠️ Unsupported document type", {
           x: 50,
@@ -178,7 +178,27 @@ export default async function generatePDF(formData, plan) {
     }
   }
 
-  // ✅ Save PDF
-  const pdfBytes = await pdfDoc.save();
-  return new Blob([pdfBytes], { type: "application/pdf" });
+ // ✅ Save PDF
+const pdfBytes = await pdfDoc.save();
+console.log("PDF generation completed.");
+
+// ✅ Create a download link for testing without breaking existing code
+const blob = new Blob([pdfBytes], { type: "application/pdf" });
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "test.pdf";
+a.textContent = "Download PDF";
+a.style.position = "fixed";
+a.style.bottom = "20px";
+a.style.left = "20px";
+a.style.background = "#4CAF50";
+a.style.color = "white";
+a.style.padding = "10px 20px";
+a.style.borderRadius = "5px";
+a.style.zIndex = "1000";
+document.body.appendChild(a);
+
+// ✅ Return the Blob as before
+return blob;
 }

@@ -120,8 +120,12 @@ export default function RegisterForm() {
         storage,
         `registrations/${formData.name}_${timestamp}.pdf`
       );
+      console.log("Uploading PDF now...");
       await uploadBytes(pdfRef, pdfBlob);
+      console.log("PDF uploaded successfully.");
       const pdfURL = await getDownloadURL(pdfRef);
+      console.log("PDF URL fetched:", pdfURL);
+
 
       await addDoc(collection(db, "registrations"), {
         name: formData.name,
